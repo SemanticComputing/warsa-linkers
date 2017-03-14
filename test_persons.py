@@ -388,11 +388,23 @@ class TestPersonValidation(TestCase):
 
         self.assertEqual(self.validator.get_name_score(person), 0)
 
+        person = {'properties': {'first_names': ['"Turo Jare"']}, 'matches': ['T. Karpalo'], 'id': 'id'}
+
+        self.assertEqual(self.validator.get_name_score(person), 0)
+
+        person = {'properties': {'first_names': ['"Turo Jare"']}, 'matches': ['J. Karpalo'], 'id': 'id'}
+
+        self.assertEqual(self.validator.get_name_score(person), 0)
+
         person = {'properties': {'first_names': ['"Turo Tero"']}, 'matches': ['Tero Karpalo'], 'id': 'id'}
 
         self.assertEqual(self.validator.get_name_score(person), 3)
 
         person = {'properties': {'first_names': ['"Turo Tero"']}, 'matches': ['Turo Karpalo'], 'id': 'id'}
+
+        self.assertEqual(self.validator.get_name_score(person), 5)
+
+        person = {'properties': {'first_names': ['"Turo Tero"']}, 'matches': ['Turo Tero Karpalo'], 'id': 'id'}
 
         self.assertEqual(self.validator.get_name_score(person), 5)
 

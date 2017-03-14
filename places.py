@@ -175,8 +175,9 @@ if __name__ == '__main__':
     ]
 
     events_only_ignore = [
-        'turtola',  # only for events!
-        'pajari'  # only for events, remove for photos
+        'turtola',
+        'pajari',
+        'kivimäki'
     ]
 
     if sys.argv[1] == 'event':

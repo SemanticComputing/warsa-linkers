@@ -1,7 +1,13 @@
 import re
 import sys
+import logging
 from collections import OrderedDict
+from rdflib import URIRef
 from arpa_linker.link_helper import process_stage
+
+logger = logging.getLogger('arpa_linker.arpa')
+
+WINTER_WAR_PERIODS = set(('<http://ldf.fi/warsa/conflicts/WinterWar>', '<http://ldf.fi/warsa/conflicts/InterimPeace>',))
 
 # Roman numeral handling from http://stackoverflow.com/a/28777781/4321262
 
@@ -76,6 +82,24 @@ def preprocessor(text, *args):
     'II/JR 9. # JR 9'
     >>> preprocessor("11/JR 9.")
     'XI/JR 9. # JR 9'
+    >>> preprocessor("Laat Rpr")
+    'Laat.RPr.'
+    >>> preprocessor("Laat.RPr")
+    'Laat.RPr.'
+    >>> preprocessor("Laat.RPr.")
+    'Laat.RPr.'
+    >>> preprocessor("Laatokan Rpr:n")
+    'Laatokan rannikkoprikaati'
+    >>> preprocessor("Laat. R. Pr. Purjehduskausi")
+    'Laat.RPr. Purjehduskausi'
+    >>> preprocessor("Kenttäsairaala 35: Shakkia pelataan")
+    '35. Kenttäsairaala: Shakkia pelataan'
+    >>> preprocessor("Kenttäsairaala A26. Valkotakkinen lääkäri")
+    '26. Kenttäsairaala. Valkotakkinen lääkäri'
+    >>> preprocessor("25.KS Os.")
+    '25. KS Os.'
+    >>> preprocessor("KS 32")
+    '32. KS'
     """
 
     # E.g. URR:n -> URR
@@ -90,8 +114,8 @@ def preprocessor(text, *args):
     # Div -> D
     text = re.sub(r'\b[Dd]iv\.\s*', 'D ', text)
 
-    # D, Pr
-    text = re.sub(r'\b(\d+)\.?\s*(?=D|Pr\b)', r'\1. ', text)
+    # D, Pr, KS
+    text = re.sub(r'\b(\d+)[./]?\s*(?=D|Pr\b|KS\b)', r'\1. ', text)
 
     # J.R. -> JR
     text = re.sub(r'\bJ\.[Rr]\.?\s*(?=\d)', 'JR ', text)
@@ -111,6 +135,14 @@ def preprocessor(text, *args):
     # AK, AKE
     text = re.sub(r'([IV])\.\s*(?=AKE?)', r'\1 ', text)
 
+    # Rannikkoprikaati
+    text = re.sub(r'Laat\.?\s*R\.?\s*[Pp]r\.?', r'Laat.RPr.', text)
+    text = re.sub(r'(?<=n )R[Pp]r\.?', r'rannikkoprikaati', text)
+    text = re.sub(r'E/II R[Pp]r\.?', r'2.RPr.E', text)
+
+    # Kenttäsairaala
+    text = re.sub(r'([Kk]enttäsairaala\w*|KS)-?\s+[A-Z]?(\d+)', r'\2. \1', text)
+
     # Match super unit as well
     for m in re.finditer(r'(?<=/)([A-Z]+\.?\s*\d+)', text):
         text += ' # {}'.format(m.group(0))
@@ -124,6 +156,41 @@ def preprocessor(text, *args):
     return text
 
 
+class Validator:
+    def __init__(self, graph, *args, **kwargs):
+        self.graph = graph
+
+    def validate(self, results, text, s):
+        if not results:
+            return results
+        war = self.graph.value(s, URIRef('http://ldf.fi/warsa/actors/hasConflict'))
+        logger.info('War: {} ({})'.format(war, 'talvisota' if war in WINTER_WAR_PERIODS else 'jatkosota'))
+        if war in WINTER_WAR_PERIODS:
+            res = [r for r in results if set(r['properties'].get('war', [])) & WINTER_WAR_PERIODS]
+        else:
+            res = [r for r in results if set(r['properties'].get('war', [])) - WINTER_WAR_PERIODS]
+
+        units_no_war = [r for r in results if r['properties'].get('war') is None]
+        res += units_no_war
+
+        units = []
+        for r in res:
+            try:
+                cover = int(r['label'])
+                if cover > 1938 and cover < 1946:
+                    logger.info('Rejectin {} (cover number is year)'.format(r))
+                    continue
+            except ValueError:
+                pass
+            units.append(r)
+
+        discarded = [r['id'] for r in results if r not in units]
+        if discarded:
+            logger.info('Rejecting {} (wrong period)'.format(discarded))
+
+        return units
+
+
 ignore = (
     'Puolukka',
     'Otava',
@@ -131,7 +198,7 @@ ignore = (
     'Varsa',
     'Neito',
     'Voima',
-    'RPr',  # Ratsuväkiprikaati talvisodassa, rannikkoprikaati jatkosodassa
+    'Turku'
 )
 
 
@@ -141,4 +208,4 @@ if __name__ == '__main__':
         doctest.testmod()
         exit()
 
-    process_stage(sys.argv, preprocessor=preprocessor, ignore=ignore)
+    process_stage(sys.argv, preprocessor=preprocessor, ignore=ignore, validator_class=Validator, log_level='INFO')
