@@ -1,4 +1,5 @@
 @prefix : <http://ldf.fi/warsa/photographs/> .
+@prefix wev: <http://ldf.fi/warsa/events/> .
 @prefix crm: <http://www.cidoc-crm.org/cidoc-crm/> .
 @prefix dc: <http://purl.org/dc/terms/> .
 @prefix dctype: <http://purl.org/dc/dcmitype/> .
@@ -11,6 +12,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 :sakuva_100253 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Tulio" ;
     :place_string "Kuuttilahti" ;
     :theme "352/A7" ;
@@ -24,6 +26,7 @@
     skos:prefLabel "Everstiluutnantti Aho ja luutnantti Toivonen (JR 50) ovat saaneet rautaristin." .
 
 :sakuva_99432 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Sot.virk. P.Kinnarinen" ;
     :place_string "Lempaala" ;
     :theme "264" ;
@@ -38,6 +41,7 @@
     skos:prefLabel "Luutnantti A.Zilliacus ( 1/I/E JR 1) komentokorsunsa edustalla." .
 
 :sakuva_99430 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Sot.virk. P.Kinnarinen" ;
     :place_string "Lempaala" ;
     :theme "264" ;
@@ -52,6 +56,7 @@
     skos:prefLabel "III/E JR 1:n komentaja kapteeni Tammisto ja hänen II lk. rautaristin saanut komppanianpäällikkönsä, luutnantti J.Savinen." .
 
 :sakuva_132277 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Luutnantti Pekka Kyytinen" ;
     :place_string "Itä-Lemetti" ;
     :theme "212/Ttus. RL." ;
@@ -66,6 +71,7 @@
     skos:prefLabel "Kuva Makkarakukkulalta lounaaseen kukkulan 80 koillisrinteelle, missä JR 39:n 3. komppanialla olivat asemat." .
 
 :sakuva_3678 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki H. Harrivirta" ;
     :place_string "Poventsa-Krivi" ;
     :theme "C" ;
@@ -78,6 +84,7 @@
     skos:prefLabel "Haarakaukoputki ja miehet samassa paikassa, missä Marski seisoi tapauksen aikana. Takana näkyy aikaisemmin mainittu tulikorsu. Toinen kranaatti tuli noin 20 metrin päähän haarakaukoputkesta, rannalle tulikorsun paikkeille. Neljäs ja viimeinen kranaatti taaemmaksi metsään. " .
 
 :sakuva_116535 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki K. Borg" ;
     :place_string "Uutujärvi" ;
     :theme "479/A 1" ;
@@ -90,6 +97,7 @@
     skos:prefLabel "5.D:n esikuntapäällikkö majuri Seppälä allekirjoittamassa paperia korsun edustalla olevassa tuolissaan." .
 
 :sakuva_116536 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki K. Borg" ;
     :place_string "Uutujärvi" ;
     :theme "479/A 1" ;
@@ -102,6 +110,7 @@
     skos:prefLabel "5.D:n op.os:n päällikkö majuri Hovi." .
 
 :sakuva_116537 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki K. Borg" ;
     :place_string "Uutujärvi" ;
     :theme "479/A 1" ;
@@ -114,6 +123,7 @@
     skos:prefLabel "Eversti Karhu, majuri Seppälä ja 5.D:n komendantti, luutnantti Leka." .
 
 :sakuva_116538 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki K. Borg" ;
     :place_string "Uutujärvi" ;
     :theme "479/A 1" ;
@@ -126,6 +136,7 @@
     skos:prefLabel "Vas-oik: majuri Järventaus, kapteeni Yrjö-Koskinen, kapteeni Artto ja everstiluutnantti Konow divisioonan murtomaajuoksukilpailuita katsomassa." .
 
 :sakuva_116539 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki K. Borg" ;
     :place_string "Uutujärvi" ;
     :theme "479/A 1" ;
@@ -138,6 +149,7 @@
     skos:prefLabel "Vas-oik: majuri Hovi, majuri Seppälä, everstiluutnantti Konow murtomaajuoksukilpailujen kilpailupaikalla." .
 
 :sakuva_93744 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Sot.virk. Martti Aaltonen" ;
     :place_string "Lempaala" ;
     :theme "201" ;
@@ -151,6 +163,7 @@
     skos:prefLabel "Pataljoonan komentaja, Mannerheim-ritari kapteeni Viiri komentokorsunsa edustalla, esimiestensä seurassa. Kuvassa vasemmalta: eversti Sihvo, kapteeni Viiri, everstiluutnantti Vänttinen." .
 
 :sakuva_103616 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "J. Vuorela" ;
     :place_string "Äänislinna" ;
     :theme "213/D" ;
@@ -164,6 +177,7 @@
     skos:prefLabel "Mannerheimristin ritari alikersantti Korpi, Paavo K. JP 4." .
 
 :sakuva_127026 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki Sjöblom" ;
     :place_string "Mikkeli" ;
     :theme "PM 83" ;
@@ -177,6 +191,7 @@
     skos:prefLabel "Mannerheim-ristin ritarit, vas: komentajakapteeni Pirhonen, vääpeli L.V.Moisander, luutnantti Leskinen, kersantti Arvi Liikanen, majuri Puustinen, korpraali Eino Laisi, kapteeni Wind, luutnantti Nykänen, vääpeli Onni Määttänen, ylikersantti Mikko Pöllä, kersantti L.Heino, korpraali Sakari Sandroos, sotamies Erkki Korpi, kersantti Olavi Tuomela, lentomestari Oksala." .
 
 :sakuva_127026_test a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Vänrikki Sjöblom" ;
     :place_string "Mikkeli" ;
     :theme "PM 83" ;
@@ -190,6 +205,7 @@
     skos:prefLabel "Mannerheim-ristin ritarit, sotamies Korpi, kersantti Olavi Tuomela, lentomestari Oksala." .
 
 :sakuva_1000 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "Sot.virk. M. Persson" ;
     :place_string "Syväri, Homorovits" ;
     :theme "277" ;
@@ -202,6 +218,7 @@
     skos:prefLabel "Det stora Skidtävlingarna i södra Syväri. Publiken i väntan på segraren, vid målet." .
 
 :sakuva_74965 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :photographer_string "E. J. Viitasalo" ;
     :place_string "Maaselkä" ;
     :unit <http://ldf.fi/warsa/actors/actor_2747> ;
@@ -215,6 +232,7 @@
     skos:prefLabel "Sissipataljoona 2. hiihtoammuntakilpailusta: Tässä ottaa kilpailun voittaja kersantti Leskinen komeasti mäen. Hän hiihti parhaan ajan ja ampui täydet pisteet. Eikä ihmekään sillä hän on siviilissä Pohjois-Savon Nuorten mestari." .
 
 :sakuva_37700 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :place_string "Rukajärven suunta, I/KTR 18 ja III/JR56" ;
     :theme "F321" ;
     dc:created "1942-07-23"^^xsd:date ;
@@ -226,6 +244,7 @@
     skos:prefLabel "Partio palannut, luutn. Järvinen kertoilee kuulumisiaan, joita TK-mies (taustalla) tarkkaavaisena kuuntelee." .
 
 :sakuva_51458 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :place_string "Immola" ;
     :theme "H126" ;
     dc:created "1941-10-10"^^xsd:date ;
@@ -237,6 +256,7 @@
     skos:prefLabel "Lentomestari Tuominen tarkastelee koneen konekiväärejä." .
 
 :sakuva_44324 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :place_string "Römpötti" ;
     :theme "207" ;
     dc:creator "Luutnantti J.Ilanko" ;
@@ -247,6 +267,7 @@
     skos:prefLabel "Mannerheim-ristin ritari lentomestari Oiva Tuominen, jolla on 30 ilmavoittoa tilillään, odottaa lentueen hälytystä. Syyskuu 1942." .
 
 :sakuva_89614 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/ContinuationWar> ;
     :place_string "Joensuu, Niittylahti, Tohmajärvi" ;
     dc:creator "Wiro, P.J., luutn." ;
     dc:description "Vääpeli Tuominen ltn. Linkolan lentueesta, joka ampui Joensuun lähellä 3 (4?) konetta alas" ;
@@ -254,4 +275,15 @@
     sch:contentUrl "http://sa-kuva.fi/static/96/14/89614_r500.jpg" ;
     sch:thumbnailUrl "http://sa-kuva.fi/static/96/14/89614_r100.jpg" ;
     skos:prefLabel "Vääpeli Tuominen ltn. Linkolan lentueesta, joka ampui Joensuun lähellä 3 (4?) konetta alas" .
+
+:sakuva_104726 a :Photograph ;
+    wev:related_period <http://ldf.fi/warsa/conflicts/WinterWar> ;
+    :is_color false ;
+    :theme "44.0" ;
+    dc:description "Pekka Tiilikainen haastattelee muonan kuljettajaa."@fi ;
+    dc:source sources:source13 ;
+    sch:contentUrl "http://sa-kuva.fi/static/47/26/104726_r500.jpg" ;
+    sch:thumbnailUrl "http://sa-kuva.fi/static/47/26/104726_r100.jpg" ;
+    crm:P1_is_identified_by 104726 ;
+    skos:prefLabel "Pekka Tiilikainen haastattelee muonan kuljettajaa."@fi .
 

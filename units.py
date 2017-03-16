@@ -7,7 +7,8 @@ from arpa_linker.link_helper import process_stage
 
 logger = logging.getLogger('arpa_linker.arpa')
 
-WINTER_WAR_PERIODS = set(('<http://ldf.fi/warsa/conflicts/WinterWar>', '<http://ldf.fi/warsa/conflicts/InterimPeace>',))
+WINTER_WAR_PERIODS = set(('<http://ldf.fi/warsa/conflicts/WinterWar>',
+            '<http://ldf.fi/warsa/conflicts/InterimPeace>',))
 
 # Roman numeral handling from http://stackoverflow.com/a/28777781/4321262
 
@@ -45,62 +46,6 @@ def roman_repl(m):
 
 
 def preprocessor(text, *args):
-    """
-    >>> preprocessor("Klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus Kotkan lohkoa vastaan.")
-    'klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus Kotkan lohkoa vastaan.'
-    >>> preprocessor("7 div.komendörs")
-    '7. D komendörs'
-    >>> preprocessor("Tyk.K/JR22:n hyökkäyskaistaa.")
-    'TykK/JR 22 hyökkäyskaistaa. # JR 22'
-    >>> preprocessor("1/JR 10:ssä.")
-    'I/JR 10. # JR 10'
-    >>> preprocessor("1/JR10:ssä.")
-    'I/JR 10. # JR 10'
-    >>> preprocessor("JP1:n radioasema")
-    'JP 1 radioasema'
-    >>> preprocessor("2./I/15.Pr.")
-    '2./I/15. Pr. # 15. Pr'
-    >>> preprocessor("IV.AKE.")
-    'IV AKE.'
-    >>> preprocessor("(1/12.Pr.)")
-    '(1/12. Pr.) # 12. Pr'
-    >>> preprocessor("Tsto 3/2. DE aliupseerit.")
-    'Tsto 3/2. DE aliupseerit. # 2. DE'
-    >>> preprocessor("pistooli m/41.")
-    'pistooli m/41.'
-    >>> preprocessor("Raskas patteristo/14.D. Elo-syyskuu 1944.")
-    'Raskas patteristo/14. D. Elo-syyskuu 1944. # 14. D'
-    >>> preprocessor("Kenraalimajuri E.J.Raappana seurueineen.")
-    'Kenraalimajuri E.J.Raappana seurueineen.'
-    >>> preprocessor("J.R.8. komentaja, ev. Antti")
-    'JR 8. komentaja, ev. Antti'
-    >>> preprocessor("Harlu JP.I.")
-    'Harlu JP 1.'
-    >>> preprocessor("2/JR 9.")
-    'II/JR 9. # JR 9'
-    >>> preprocessor("2./JR 9.")
-    'II/JR 9. # JR 9'
-    >>> preprocessor("11/JR 9.")
-    'XI/JR 9. # JR 9'
-    >>> preprocessor("Laat Rpr")
-    'Laat.RPr.'
-    >>> preprocessor("Laat.RPr")
-    'Laat.RPr.'
-    >>> preprocessor("Laat.RPr.")
-    'Laat.RPr.'
-    >>> preprocessor("Laatokan Rpr:n")
-    'Laatokan rannikkoprikaati'
-    >>> preprocessor("Laat. R. Pr. Purjehduskausi")
-    'Laat.RPr. Purjehduskausi'
-    >>> preprocessor("Kenttäsairaala 35: Shakkia pelataan")
-    '35. Kenttäsairaala: Shakkia pelataan'
-    >>> preprocessor("Kenttäsairaala A26. Valkotakkinen lääkäri")
-    '26. Kenttäsairaala. Valkotakkinen lääkäri'
-    >>> preprocessor("25.KS Os.")
-    '25. KS Os.'
-    >>> preprocessor("KS 32")
-    '32. KS'
-    """
 
     # E.g. URR:n -> URR
     text = re.sub(r'(?<=\w):\w+', '', text)
@@ -163,7 +108,7 @@ class Validator:
     def validate(self, results, text, s):
         if not results:
             return results
-        war = self.graph.value(s, URIRef('http://ldf.fi/warsa/actors/hasConflict'))
+        war = '<{}>'.format(self.graph.value(s, URIRef('http://ldf.fi/warsa/events/related_period')))
         logger.info('War: {} ({})'.format(war, 'talvisota' if war in WINTER_WAR_PERIODS else 'jatkosota'))
         if war in WINTER_WAR_PERIODS:
             res = [r for r in results if set(r['properties'].get('war', [])) & WINTER_WAR_PERIODS]
@@ -173,20 +118,24 @@ class Validator:
         units_no_war = [r for r in results if r['properties'].get('war') is None]
         res += units_no_war
 
+        discarded = [r['id'] for r in res if r not in results]
+        if discarded:
+            logger.info('Reject: wrong period {}'.format(discarded))
+
         units = []
         for r in res:
             try:
                 cover = int(r['label'])
                 if cover > 1938 and cover < 1946:
-                    logger.info('Rejectin {} (cover number is year)'.format(r))
+                    logger.info('Reject: cover number is year {}'.format(r))
+                    discarded.append(r)
                     continue
             except ValueError:
                 pass
             units.append(r)
 
-        discarded = [r['id'] for r in results if r not in units]
         if discarded:
-            logger.info('Rejecting {} (wrong period)'.format(discarded))
+            logger.info('Rejected: {}'.format(discarded))
 
         return units
 
