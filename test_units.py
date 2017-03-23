@@ -58,18 +58,18 @@ class TestUnitDisambiguation(TestCase):
             'war': ['<http://ldf.fi/warsa/conflicts/ContinuationWar>'],
             'label': ['"1940"']
         }
-        props_cover = {
-            'war': ['<http://ldf.fi/warsa/conflicts/ContinuationWar>'],
-            'label': ['"3000"']
-        }
         unit_year = {
             'properties': props_cover_year,
             'label': '1940',
             'id': 'http://ldf.fi/warsa/actors/actor_15034'
         }
+        props_cover = {
+            'war': ['<http://ldf.fi/warsa/conflicts/ContinuationWar>'],
+            'label': ['"3100"']
+        }
         unit = {
             'properties': props_cover,
-            'label': '3000',
+            'label': '3100',
             'id': 'http://ldf.fi/warsa/actors/actor_15035'
         }
         results = [unit_year, unit]
@@ -79,6 +79,45 @@ class TestUnitDisambiguation(TestCase):
 
         results = [unit_year]
         self.assertEqual(self.validator.validate(results, '', s), [])
+
+        props_cover['label'] = ['"1814"']
+        unit['properties'] = props_cover
+        unit['label'] = '1814'
+        results = [unit]
+        self.assertEqual(self.validator.validate(results, '', s), [unit])
+
+        props_cover['label'] = ['"1816"']
+        unit['properties'] = props_cover
+        unit['label'] = '1816'
+        results = [unit]
+        self.assertEqual(self.validator.validate(results, '', s), [])
+
+    def test_check_cover(self):
+        self.assertFalse(self.validator.check_cover('1800', '1800'))
+        self.assertFalse(self.validator.check_cover('2000', '2000'))
+        self.assertFalse(self.validator.check_cover('2010', 'Noin 2010'))
+        self.assertFalse(self.validator.check_cover('2010', 'noin 2010'))
+        self.assertFalse(self.validator.check_cover('2010', 'n. 2010'))
+        self.assertFalse(self.validator.check_cover('2010', 'n.2010'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 m'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 m.'))
+        self.assertFalse(self.validator.check_cover('3030', '3030m.'))
+        self.assertFalse(self.validator.check_cover('4050', '4050 mk'))
+        self.assertFalse(self.validator.check_cover('4050', '4050 mk.'))
+        self.assertFalse(self.validator.check_cover('4050', '4050 markkaa'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 meter'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 metristä'))
+        self.assertFalse(self.validator.check_cover('3030', '3030-jotain'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 kpl'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 tonnia'))
+        self.assertFalse(self.validator.check_cover('3030', '3030 m:stä'))
+        self.assertTrue(self.validator.check_cover('3030', '3030'))
+        self.assertTrue(self.validator.check_cover('3030', '3030:n auto'))
+        self.assertTrue(self.validator.check_cover('3030', 'jotain 3030 auto'))
+        self.assertTrue(self.validator.check_cover('3030', 'Os. 3030:n auto'))
+        self.assertTrue(self.validator.check_cover('3030', ''))
+        self.assertTrue(self.validator.check_cover('', ''))
+        self.assertTrue(self.validator.check_cover('not a number', ''))
 
     def test_preprocessor(self):
         self.assertEqual(preprocessor("Klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus Kotkan lohkoa vastaan."), 'klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus Kotkan lohkoa vastaan.')

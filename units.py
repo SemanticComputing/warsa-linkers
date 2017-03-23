@@ -104,10 +104,32 @@ def preprocessor(text, *args):
 class Validator:
     def __init__(self, graph, *args, **kwargs):
         self.graph = graph
+        self.known_covers = (1812, 1814,)
+        self.known_wrong_covers = (1000, 2000, 3000, 4000, 6000)
+        self.cover_re = r'\s*(-|valistusta|kpl|kappale(tta|en)|tonni[na]?|(m(etri([än]|stä)?|eter)?)|kg|(kilo[na]?)|([lL](itra[an])?)|mk|markkaa|vankia|(watt?i[na]?)|(nime[än])|mie(hen|stä))\b'
+
+    def check_cover(self, cover, text):
+        try:
+            cover_int = int(cover)
+            if cover_int > 1799 and cover_int < 1946 and cover_int not in self.known_covers:
+                return False
+            elif cover_int in self.known_wrong_covers:
+                return False
+        except ValueError:
+            return True
+
+        if re.search(r'\bn(\.|oin)?\s*' + cover, text, re.I):
+            return False
+        if re.search(cover + self.cover_re, text, re.I):
+            return False
+
+        return True
 
     def validate(self, results, text, s):
         if not results:
             return results
+        original_text = self.graph.value(s, URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'))
+        logger.info('ORIG: {}'.format(original_text))
         war = '<{}>'.format(self.graph.value(s, URIRef('http://ldf.fi/warsa/events/related_period')))
         logger.info('War: {} ({})'.format(war, 'talvisota' if war in WINTER_WAR_PERIODS else 'jatkosota'))
         if war in WINTER_WAR_PERIODS:
@@ -118,20 +140,17 @@ class Validator:
         units_no_war = [r for r in results if r['properties'].get('war') is None]
         res += units_no_war
 
-        discarded = [r['id'] for r in res if r not in results]
+        discarded = [r['id'] for r in results if r not in res]
         if discarded:
             logger.info('Reject: wrong period {}'.format(discarded))
 
         units = []
         for r in res:
-            try:
-                cover = int(r['label'])
-                if cover > 1938 and cover < 1946:
-                    logger.info('Reject: cover number is year {}'.format(r))
-                    discarded.append(r)
-                    continue
-            except ValueError:
-                pass
+            if not self.check_cover(r['label'], original_text):
+                discarded.append(r)
+                logger.info('Reject: cover {} {}'.format(r['label'], r['id']))
+                continue
+
             units.append(r)
 
         if discarded:
@@ -147,7 +166,8 @@ ignore = (
     'Varsa',
     'Neito',
     'Voima',
-    'Turku'
+    'Turku',
+    'suursaari',
 )
 
 

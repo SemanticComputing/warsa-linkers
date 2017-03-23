@@ -34,6 +34,8 @@ class Validator:
                 results[i]['id'] = 'http://ldf.fi/pnr/P_10012991'
             elif label == "Kylänmäki":
                 results[i]['id'] = 'http://ldf.fi/pnr/P_10530797'
+            elif label == "Käpylä":
+                results[i]['id'] = 'http://ldf.fi/pnr/P_10342681'
 
         return results
 
@@ -50,11 +52,17 @@ def preprocessor(text, *args):
     # Baseforming doesn't work for "Sommee" and "Muolaa" so baseform them manually.
     text = re.sub(r'Sommee(n?|s[st]a)?\b', 'Sommee', text)
     text = re.sub(r'Muolaa(n?|s[st]a)?\b', 'Muolaa', text)
+
+    text = re.sub(r'Helsingi(n?|s[st]ä)\b', 'Helsinki', text)
+    text = re.sub(r'Repolasta', 'Repola', text)
+    text = re.sub(r'Bio Rex(in|iss[aä])?', 'Helsinki', text)
+
+    text = re.sub(r'Oravi(ssa|sta|in)', 'Oravi', text)
+
+    text = re.sub(r'Saimaan [Kk]anava', 'Saimaankanava', text)
     # Detach names connected by hyphens to match places better.
-    # Skip Yl[äi]-, Al[ia]-, Iso-. and Pitkä-
-    text = text.replace('Pitkä-', 'Pitkä#')
-    text = re.sub(r'(?<!\b(Yl[äi]|Al[ia]|Iso))-([A-ZÄÅÖ])', r' \2', text)
-    text = text.replace('Pitkä#', 'Pitkä-')
+    # Skip Yl[äi]-, Al[ia]-, Iso-, Ulko-, and Pitkä-
+    text = re.sub(r'(?<!\b(Yl[äi]|Al[ia]|Iso|Ulko|Pitkä))-([A-ZÄÅÖ])', r' \2', text)
 
     text = text.replace('Inkilän kartano', '#')
     text = text.replace('Norjan Kirkkoniem', '#')
@@ -65,7 +73,38 @@ def preprocessor(text, *args):
 
     return text
 
+
+nen_re = re.compile(r'\w+nen\b')
+
+
+def pruner(text):
+    """
+    >>> pruner('Möttönen')
+    >>> pruner('Saimaankanava')
+    'Saimaankanava'
+    >>> pruner('Tero Teronen')
+    >>> pruner('Tenenko')
+    'Tenenko'
+    >>> pruner('Tenenko Kaivo')
+    'Tenenko Kaivo'
+    >>> pruner('Tenengon kaivo')
+    'Tenengon kaivo'
+    >>> pruner('tenengon kaivo')
+    >>> pruner('Lahdenpohja')
+    'Lahdenpohja'
+    """
+    if not text[0].isupper():
+        return None
+    if nen_re.search(text):
+        return None
+    return text
+
+
 if __name__ == '__main__':
+    if sys.argv[1] == 'test':
+        import doctest
+        doctest.testmod()
+        exit()
 
     ignore = [
         'sillanpää',
@@ -169,6 +208,87 @@ if __name__ == '__main__':
         'martti',
         'ilmarinen',
         'härkä',
+        'suokas',
+        'mäkelä',
+        'kotiranta',
+        'korpela',
+        'mutta',
+        'hillilä',
+        'lohko',
+        'pajari',
+        'hauta',
+        'tiirikkala',
+        'virkkunen',
+        'honka',
+        'tapio',
+        'sihvo',
+        'rinne',
+        'eskola',
+        'paukku',
+        'kuikka',
+        'lehto',
+        'villamo',
+        'setälä',
+        'lehmus',
+        'vaala',
+        'mukkala',
+        'anttila',
+        'kivi',
+        'venäjä',
+        'rex',
+        'tunturi',
+        'tahko',
+        'runko',
+        'kauria',
+        'hassinen',
+        'kyyrö',
+        'kurimo',
+        'möttönen',
+        'ryönä',
+        'ruotsalo',
+        'rakola',
+        'seppä',
+        'aittola',
+        'suo',
+        'hermola',
+        'mattila',
+        'kuuma',
+        'attila',
+        'karjalaiskylä',
+        'laakso',
+        'hevoshaka',
+        'keihäs',
+        'palava',
+        'klemetti',
+        'kero',
+        'romu',
+        'kalevala',
+        'keskimmäinen',
+        'pio',
+        'kartano',
+        'amerikka',
+        'itämeri',
+        'kaleva',
+        'paasto',
+        'vuokko',
+        'suutari',
+        'fossi',
+        'fagernäs',
+        'jyrkkä',
+        'kypärä',
+        'löytö',
+        'pesu',
+        'satama',
+        'teppo',
+        'halli',
+        'kola',
+        'orava',
+        'puoliväli',
+        'tarkka',
+        'asemi',
+        'kauko',
+        'ruotsinsalmi',  # boat
+        'riilahti',  # boat
         # 'maaselkä',  # the proper one does not exist yet
         # 'kalajoki'  # the proper one does not exist yet
         # 'karsikko'?
@@ -177,14 +297,59 @@ if __name__ == '__main__':
     events_only_ignore = [
         'turtola',
         'pajari',
-        'kivimäki'
+        'kivimäki',
+        'pello',
+        'rauhaniemi',
+        'hallakorpi',
+        'kontula',
+        'törmä',
+        'näsi',
+        'lohikoski',
+        'huhtala',
+        'siiri',
+        'jurva',
+        'kujala',
+        'kurjenmäki',
+        'hietala',
+        'puhakka',
+        'helppi',
+        'lehtovaara',
+        'mäkelä',
+        'palho',
+        'härmälä',
+        'torkkeli',
+        'jutila',
+        'rasi',
+        'sirkka',
+        'levo',
+        'polo',
+        'putkinotko',
+        'ristola',
+        'harmaala',
+        'jukola',
+        'varstala',
+        'rongas',
+        'linnus',
+        'louko',
+        'ruohola',
+        'holm',
+        'hakola',
+        'suomela',
+        'kalaja',
+        'kalpio',
+        'hovila',
+        'komppa',
+        'suna',
+        'turja',
     ]
 
     if sys.argv[1] == 'event':
         print('Handling as events')
         ignore = ignore + events_only_ignore
+        pruner_fun = pruner
     elif sys.argv[1] == 'photo':
         print('Handling as photos')
+        pruner_fun = None
     else:
         raise ValueError('Invalid dataset')
 
@@ -201,5 +366,5 @@ if __name__ == '__main__':
         'http://ldf.fi/pnr-schema#place_type_560',
     ]
 
-    process_stage(args, ignore=ignore, validator_class=Validator,
+    process_stage(args, ignore=ignore, pruner=pruner_fun, validator_class=Validator,
             preprocessor=preprocessor, remove_duplicates=no_duplicates)
