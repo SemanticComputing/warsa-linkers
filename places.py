@@ -41,6 +41,25 @@ class Validator:
 
 
 def preprocessor(text, *args):
+    """
+    >>> preprocessor('Ulko-Tammio')
+    'Ulko-Tammio'
+    >>> preprocessor('Yli-Tapiola')
+    'Yli-Tapiola'
+    >>> preprocessor('Helsinki-Vantaa')
+    'Helsinki Vantaa'
+    >>> preprocessor('Oinola')
+    'Oinaala'
+    >>> preprocessor('Helsinki,Oulu')
+    'Helsinki, Oulu'
+    >>> preprocessor('Some text Helsinki')
+    'Some text Helsinki'
+    >>> preprocessor('Sommeesta')
+    'Sommee'
+    >>> preprocessor('Pidettiin Bio Rexissä')
+    'Pidettiin Helsinki'
+    """
+
     text = text.replace('Yli-Tornio', 'Ylitornio')
     text = re.sub('Oin[ao]la', 'Oinaala', text)
     # Remove unit numbers that would otherwise be interpreted as Ii.
@@ -62,7 +81,7 @@ def preprocessor(text, *args):
     text = re.sub(r'Saimaan [Kk]anava', 'Saimaankanava', text)
     # Detach names connected by hyphens to match places better.
     # Skip Yl[äi]-, Al[ia]-, Iso-, Ulko-, and Pitkä-
-    text = re.sub(r'(?<!\b(Yl[äi]|Al[ia]|Iso|Ulko|Pitkä))-([A-ZÄÅÖ])', r' \2', text)
+    text = re.sub(r'(?<!\b(Yl[äi]|Al[ia]|Iso))(?<!\bUlko)(?<!\bPitkä)-([A-ZÄÅÖ])', r' \2', text)
 
     text = text.replace('Inkilän kartano', '#')
     text = text.replace('Norjan Kirkkoniem', '#')

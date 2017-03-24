@@ -168,6 +168,7 @@ ignore = (
     'Voima',
     'Turku',
     'suursaari',
+    'tor',
 )
 
 
