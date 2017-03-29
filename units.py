@@ -105,7 +105,7 @@ class Validator:
     def __init__(self, graph, *args, **kwargs):
         self.graph = graph
         self.known_covers = (1812, 1814,)
-        self.known_wrong_covers = (1000, 2000, 3000, 4000, 6000)
+        self.known_wrong_covers = (1000, 2000, 3000, 4000, 6000, 10000)
         self.cover_re = r'\s*(-|valistusta|kpl|kappale(tta|en)|tonni[na]?|(m(etri([än]|stä)?|eter)?)|kg|(kilo[na]?)|([lL](itra[an])?)|mk|markkaa|vankia|(watt?i[na]?)|(nime[än])|mie(hen|stä))\b'
 
     def check_cover(self, cover, text):
@@ -123,6 +123,7 @@ class Validator:
         if re.search(cover + self.cover_re, text, re.I):
             return False
 
+        logger.info('Matched by cover number ({})')
         return True
 
     def validate(self, results, text, s):

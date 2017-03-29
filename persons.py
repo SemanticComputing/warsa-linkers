@@ -358,7 +358,7 @@ class Validator:
                 continue
 
             latest_date = promotion_date
-            res = rank.replace('"', '')
+            res = re.sub(r'(@\w+)|"', '', rank)
 
         return res
 
@@ -368,8 +368,8 @@ class Validator:
         latest_date = None
         potential_lowest_ranks = set()
         for i, rank in enumerate(props.get(rank_type)):
+            rank = re.sub(r'(@\w+)|"', '', rank)
 
-            rank = rank.replace('"', '')
             if rank == 'Yleisesikuntaupseeri':
                 # Yleisesikuntaupseeri is not an actual rank.
                 continue
@@ -816,6 +816,9 @@ ak_regex = re.compile(_ak_re)
 _sv_re = r'[Ss]ot(?:(?:ilasvirk(?:(?:\.\s*)|(?:(?:ailija[t]?|amies|amiehet)\s+)))|(?:\.\s*virk\.\s*))' + list_regex
 sv_regex = re.compile(_sv_re)
 
+_sks_re = r'\b[Ss]otilaskotisisaret' + list_regex
+sks_regex = re.compile(_sks_re)
+
 
 def repl(groups):
 
@@ -946,6 +949,10 @@ def replace_sv_list(text):
     return add_titles(sv_regex, 'sotilasvirkamies', text)
 
 
+def replace_sks_list(text):
+    return add_titles(sks_regex, 'sotilaskotisisar', text)
+
+
 to_be_lowercased = (
     "Eversti",
     "Luutnantti",
@@ -970,6 +977,7 @@ def process_lists(text):
     text = replace_k_list(text)
     text = replace_ak_list(text)
     text = replace_lieutenant_list(text)
+    text = replace_sks_list(text)
 
     return text
 
@@ -1005,8 +1013,7 @@ def handle_specific_people(text):
 
     text = re.sub('(?<!Adolf )Hitler', 'Adolf Hitler', text)
 
-    text = re.sub(r'(Saharan|Marokon) kauhu', '# kapteeni Juutilainen #', text)
-    text = re.sub(r'luutnantti\s+Juutilainen', '# kapteeni Juutilainen #', text)
+    text = re.sub(r'([Ss]aharan|[Mm]arokon) kauhu', '# Aarne Edward Juutilainen #', text)
 
     text = re.sub(r'(?<!patterin päällikkö )[Kk]apteeni (Joppe )?Karhu(nen|sen)', '# kapteeni Jorma Karhunen #', text)
     text = re.sub(r'(?<!3\. )(?<!III )(luutnantti|[Vv]änrikki|Lauri Wilhelm) Nissi(nen|sen)\b', '# vänrikki Lauri Nissinen #', text)
@@ -1018,7 +1025,7 @@ def handle_specific_people(text):
     # text = text.replace('Söderhjelm', '## Johan Otto Söderhjelm')
     text = re.sub(r'(?<![Ee]verstiluutnantti )Paasikivi', '# Juho Kusti Paasikivi', text)
     text = re.sub(r'([Pp]uolustus)?[Mm]inisteri Walden', 'kenraalikunta Walden', text)
-    text = re.sub(r'[vV]ääpeli( Oiva)? Tuomi(nen|selle|sen)', '# lentomestari Oiva Tuominen', text)
+    text = re.sub(r'"?Oippa"?', '', text)
     text = re.sub(r'Ukko[ -]Pekka(\W+Svinhufvud)?', 'Pehr Evind Svinhufvud', text)
     text = re.sub(r'[Pp]residentti Svinhufvud', 'Pehr Evind Svinhufvud', text)
     text = re.sub(r'[Pp]residentti\s+ja\s+rouva\s+Svinhufvud', 'Pehr Evind Svinhufvud ja Ellen Svinhufvud ', text)
@@ -1038,6 +1045,8 @@ def handle_specific_people(text):
     text = text.replace('Tuomas Noponen', 'korpraali Tuomas Noponen')
 
     text = text.replace('Sotamies Pihlajamaa', 'sotamies Väinö Pihlajamaa')
+
+    text = text.replace('Koskimaan', 'Koskimaa')
 
     return text
 

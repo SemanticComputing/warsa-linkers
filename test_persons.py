@@ -258,6 +258,90 @@ class TestPersonValidation(TestCase):
 
         self.assertEqual(len(r), 2)
 
+        person = {
+            "id": "http://ldf.fi/warsa/actors/person_1049",
+            "label": "Aarne Edward Juutilainen",
+            "matches": ["kapteeni Juutilainen"],
+            "properties": {
+                "source": [
+                    "<http://ldf.fi/warsa/sources/source10>",
+                    "<http://ldf.fi/warsa/sources/source8>",
+                    "<http://ldf.fi/warsa/sources/source10>",
+                    "<http://ldf.fi/warsa/sources/source8>"
+                ],
+                "death_date": [
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>"
+                ],
+                "rank": [
+                    "\"Kapteeni\"@fi",
+                    "\"Kapteeni\"@fi",
+                    "\"Luutnantti\"@fi",
+                    "\"Luutnantti\"@fi"
+                ],
+                "rank_level": [
+                    12,
+                    12,
+                    10,
+                    10
+                ],
+                "label": [
+                    "\"Aarne Edward Juutilainen\"",
+                    "\"Aarne Edward Juutilainen\"",
+                    "\"Aarne Edward Juutilainen\"",
+                    "\"Aarne Edward Juutilainen\""
+                ],
+                "family_name": [
+                    "\"Juutilainen\"",
+                    "\"Juutilainen\"",
+                    "\"Juutilainen\"",
+                    "\"Juutilainen\""
+                ],
+                "hierarchy": [
+                    "\"Komppaniaupseeri\"@fi",
+                    "\"Komppaniaupseeri\"@fi",
+                    "\"Komppaniaupseeri\"@fi",
+                    "\"Komppaniaupseeri\"@fi"
+                ],
+                "ngram": [
+                    "\"kapteeni Juutilainen\"",
+                    "\"kapteeni Juutilainen\"",
+                    "\"kapteeni Juutilainen\"",
+                    "\"kapteeni Juutilainen\""
+                ],
+                "first_names": [
+                    "\"Aarne Edward\"",
+                    "\"Aarne Edward\"",
+                    "\"Aarne Edward\"",
+                    "\"Aarne Edward\""
+                ],
+                "id": [
+                    "<http://ldf.fi/warsa/actors/person_1049>",
+                    "<http://ldf.fi/warsa/actors/person_1049>",
+                    "<http://ldf.fi/warsa/actors/person_1049>",
+                    "<http://ldf.fi/warsa/actors/person_1049>"
+                ],
+                "promotion_date": [
+                    "\"1940-02-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1940-02-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>"
+                ],
+                "latest_promotion_date": [
+                    "\"1940-02-29\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1940-02-29\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>"
+                ]
+            }
+        }
+
+        r = self.validator.get_fuzzy_current_ranks(person, d, 'rank')
+        self.assertEqual(len(r), 1)
+        self.assertTrue('Kapteeni' in r)
+
     def test_ranks_with_unknown_date(self):
         props = {'death_date': ['"1976-09-02"^^xsd:date'],
                 'promotion_date': ['"NA"'],
@@ -363,6 +447,88 @@ class TestPersonValidation(TestCase):
         person = {'properties': ranks, 'matches': ['kenraali Karpalo']}
 
         self.assertEqual(self.validator.get_rank_score(person, date(1941, 3, 5), "kenraali Karpalo"), 8)
+
+        person = {
+            "id": "http://ldf.fi/warsa/actors/person_1049",
+            "label": "Aarne Edward Juutilainen",
+            "matches": ["kapteeni Juutilainen"],
+            "properties": {
+                "source": [
+                    "<http://ldf.fi/warsa/sources/source10>",
+                    "<http://ldf.fi/warsa/sources/source8>",
+                    "<http://ldf.fi/warsa/sources/source10>",
+                    "<http://ldf.fi/warsa/sources/source8>"
+                ],
+                "death_date": [
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1976-10-28\"^^<http://www.w3.org/2001/XMLSchema#date>"
+                ],
+                "rank": [
+                    "\"Kapteeni\"@fi",
+                    "\"Kapteeni\"@fi",
+                    "\"Luutnantti\"@fi",
+                    "\"Luutnantti\"@fi"
+                ],
+                "rank_level": [
+                    12,
+                    12,
+                    10,
+                    10
+                ],
+                "label": [
+                    "\"Aarne Edward Juutilainen\"",
+                    "\"Aarne Edward Juutilainen\"",
+                    "\"Aarne Edward Juutilainen\"",
+                    "\"Aarne Edward Juutilainen\""
+                ],
+                "family_name": [
+                    "\"Juutilainen\"",
+                    "\"Juutilainen\"",
+                    "\"Juutilainen\"",
+                    "\"Juutilainen\""
+                ],
+                "hierarchy": [
+                    "\"Komppaniaupseeri\"@fi",
+                    "\"Komppaniaupseeri\"@fi",
+                    "\"Komppaniaupseeri\"@fi",
+                    "\"Komppaniaupseeri\"@fi"
+                ],
+                "ngram": [
+                    "\"kapteeni Juutilainen\"",
+                    "\"kapteeni Juutilainen\"",
+                    "\"kapteeni Juutilainen\"",
+                    "\"kapteeni Juutilainen\""
+                ],
+                "first_names": [
+                    "\"Aarne Edward\"",
+                    "\"Aarne Edward\"",
+                    "\"Aarne Edward\"",
+                    "\"Aarne Edward\""
+                ],
+                "id": [
+                    "<http://ldf.fi/warsa/actors/person_1049>",
+                    "<http://ldf.fi/warsa/actors/person_1049>",
+                    "<http://ldf.fi/warsa/actors/person_1049>",
+                    "<http://ldf.fi/warsa/actors/person_1049>"
+                ],
+                "promotion_date": [
+                    "\"1940-02-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1940-02-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>"
+                ],
+                "latest_promotion_date": [
+                    "\"1940-02-29\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1940-02-29\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>",
+                    "\"1937-03-01\"^^<http://www.w3.org/2001/XMLSchema#date>"
+                ]
+            }
+        }
+
+        self.assertEqual(self.validator.get_rank_score(person, date(1941, 3, 5), "kapteeni Juutilainen"), 8)
 
     def test_get_date_score(self):
         props = {'death_date': ['"1940-02-01"^^xsd:date', '"1940-02-01"^^xsd:date',
@@ -845,6 +1011,8 @@ class TestPersonValidation(TestCase):
         self.assertTrue(self.validator.get_score(pauli, '"kersantti Leskinen"', ctx) <= 0)
 
     def test_preprocessor(self):
+        self.assertEqual(preprocessor("Vääpeli Oiva \"Oippa\" Tuominen"),
+            "Vääpeli Oiva Tuominen")
         self.assertEqual(preprocessor("Kuva tykkimies Rätöstä ja hänen haastattelustaan"),
             "Kuva ritari Vilho Rättö ja hänen haastattelustaan")
         self.assertEqual(preprocessor("Hitlerin vierailu Suomessa."),
@@ -876,7 +1044,7 @@ class TestPersonValidation(TestCase):
         self.assertEqual(preprocessor("Majuri Laaksonen JR 8:ssa."), 'Majuri Laaksonen JR 8:ssa.')
         self.assertEqual(preprocessor("Vas: eversti Laaksonen, kapteeni Karu, ylikersantti Vorho, ja alikersantit Paajanen ja Nordin filmattavina. Oik. komentajakapteeni Arho juttelee muiden Mannerheim-ritarien kanssa."), 'Vas: eversti Laaksonen, kapteeni Karu, ylikersantti Vorho, ja alikersantti Paajanen alikersantti Nordin filmattavina. Oik. komentajakapteeni Arho juttelee muiden Mannerheim-ritarien kanssa.')
         self.assertEqual(preprocessor("Majuri Laaksosen komentopaikka mistä johdettiin viivytystaistelua Karhumäkilinjalla. Majuri Laaksonen seisomassa kuvan keskellä."), 'Majuri Laaksosen komentopaikka mistä johdettiin viivytystaistelua Karhumäkilinjalla. Majuri Laaksonen seisomassa kuvan keskellä.')
-        self.assertEqual(preprocessor("Luutn. Juutilainen Saharan kauhu jouluk. Alussa."), '# kapteeni Juutilainen # # kapteeni Juutilainen # jouluk. Alussa.')
+        self.assertEqual(preprocessor("Luutn. Juutilainen Saharan kauhu jouluk. Alussa."), 'luutnantti Juutilainen # Aarne Edward Juutilainen # jouluk. Alussa.')
         self.assertEqual(preprocessor("Kapteenit Palolampi ja Juutilainen ratsailla Levinassa."), 'kapteeni Palolampi kapteeni Juutilainen ratsailla Levinassa.')
         self.assertEqual(preprocessor("kenraalit keskustelevat pienen tauon aikana, vas: eversti Paasonen, "
                     "kenraalimajuri Palojärvi, kenraalimajuri Svanström, Yl.Esikuntapäällikkö jalkaväenkenraali Heinrichs ja eversti Vaala."),

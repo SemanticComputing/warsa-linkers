@@ -360,6 +360,7 @@ if __name__ == '__main__':
         'komppa',
         'suna',
         'turja',
+        'kanerva',
     ]
 
     if sys.argv[1] == 'event':
