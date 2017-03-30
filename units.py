@@ -45,6 +45,10 @@ def roman_repl(m):
     return to_roman_numeral(int(m.group(1)))
 
 
+def roman_repl_w_space(m):
+    return '{} '.format(roman_repl(m))
+
+
 def preprocessor(text, *args):
 
     # E.g. URR:n -> URR
@@ -78,6 +82,7 @@ def preprocessor(text, *args):
     text = re.sub(r'\b(\d+)\.?\s*(?=/J[Rr])', roman_repl, text)
 
     # AK, AKE
+    text = re.sub(r'\b(\d+)\.?\s*(?=AKE)', roman_repl_w_space, text)
     text = re.sub(r'([IV])\.\s*(?=AKE?)', r'\1 ', text)
 
     # Rannikkoprikaati
