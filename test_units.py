@@ -147,10 +147,14 @@ class TestUnitDisambiguation(TestCase):
         self.assertEqual(preprocessor("Laat.RPr."), 'Laat.RPr.')
         self.assertEqual(preprocessor("Laatokan Rpr:n"), 'Laatokan rannikkoprikaati')
         self.assertEqual(preprocessor("Laat. R. Pr. Purjehduskausi"), 'Laat.RPr. Purjehduskausi')
-        self.assertEqual(preprocessor("Kenttäsairaala 35: Shakkia pelataan"), '35. Kenttäsairaala: Shakkia pelataan')
+        self.assertEqual(preprocessor("Kenttäsairaala 35: Shakkia pelataan"), '35. Kenttäsairaala Shakkia pelataan')
         self.assertEqual(preprocessor("Kenttäsairaala A26. Valkotakkinen lääkäri"), '26. Kenttäsairaala. Valkotakkinen lääkäri')
         self.assertEqual(preprocessor("25.KS Os."), '25. KS Os.')
         self.assertEqual(preprocessor("KS 32"), '32. KS')
+        self.assertEqual(preprocessor("14:sta LLv"), 'LLv 14 # LeLv 14')
+        self.assertEqual(preprocessor("LLv.14"), 'LLv 14 # LeLv 14')
+        self.assertEqual(preprocessor("Llv.14:n"), 'LLv 14 # LeLv 14')
+        self.assertEqual(preprocessor("32llv"), 'LLv 32 # LeLv 32')
 
 if __name__ == '__main__':
     test_suite = unittest.TestSuite()

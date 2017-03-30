@@ -52,7 +52,7 @@ def roman_repl_w_space(m):
 def preprocessor(text, *args):
 
     # E.g. URR:n -> URR
-    text = re.sub(r'(?<=\w):\w+', '', text)
+    text = re.sub(r'(?<=\w):\w*', '', text)
 
     # KLo = Kotkan Lohko, 'Klo' will match
     text = re.sub(r'\bKlo\b', 'klo', text)
@@ -84,7 +84,6 @@ def preprocessor(text, *args):
     # AK, AKE
     text = re.sub(r'\b(\d+)\.?\s*(?=AKE)', roman_repl_w_space, text)
     text = re.sub(r'([IV])\.\s*(?=AKE?)', r'\1 ', text)
-
     # Rannikkoprikaati
     text = re.sub(r'Laat\.?\s*R\.?\s*[Pp]r\.?', r'Laat.RPr.', text)
     text = re.sub(r'(?<=n )R[Pp]r\.?', r'rannikkoprikaati', text)
@@ -92,6 +91,10 @@ def preprocessor(text, *args):
 
     # Kenttäsairaala
     text = re.sub(r'([Kk]enttäsairaala\w*|KS)-?\s+[A-Z]?(\d+)', r'\2. \1', text)
+
+    # LeLv/LLv
+    text = re.sub(r'\b(Le?Lv)\.?\s*(\d+)', r'LLv \2 # LeLv \2', text, flags=re.I)
+    text = re.sub(r'\b(\d+)\.?\s*(Le?Lv)', r'LLv \1 # LeLv \1', text, flags=re.I)
 
     # Match super unit as well
     for m in re.finditer(r'(?<=/)([A-Z]+\.?\s*\d+)', text):
