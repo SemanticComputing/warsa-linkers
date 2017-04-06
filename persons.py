@@ -1159,8 +1159,11 @@ name_re = (r'^((?:[a-zA-ZäÄåÅöÖ]\.[ ]*)|(?:[' + ALLOWED_NAME_CHARS +
     r']{3,}[ ]+))*((?:[a-z]*_|[A-ZÄÖÅÜ])[' + ALLOWED_NAME_CHARS + r']{2,})$')
 name_re_compiled = re.compile(name_re)
 
+remove_period_re = re.compile(r'\.$')
+
 
 def pruner(candidate):
+    candidate = remove_period_re.sub('', candidate)
     if name_re_compiled.fullmatch(candidate):
         return candidate
     return None

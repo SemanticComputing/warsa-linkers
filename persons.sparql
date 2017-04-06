@@ -20,7 +20,7 @@ WHERE {
         <VALUES>
       }
       FILTER(STRLEN(?ngram)>2)
-      BIND(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(?ngram, '[áà]', 'a'), '[éè]', 'e'), '[íì]', 'i'), '[óò]', 'o'), '[úù]', 'u'), '[ýỳ]', 'y'), 'W', 'V') AS ?n_ngram)
+      BIND(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(?ngram, '\\.$', ''), '[áà]', 'a'), '[éè]', 'e'), '[íì]', 'i'), '[óò]', 'o'), '[úù]', 'u'), '[ýỳ]', 'y'), 'W', 'V') AS ?n_ngram)
       BIND("^((?:[a-zA-ZäÄåÅöÖüÜ]\\.[ ]*)|(?:[a-zA-ZäÄöÖåÅüÜ-]{3,}[ ]+))((?:-?[a-zA-ZäÄåÅöÖüÜ]\\.[ ]*)|(?:[a-zA-ZäÄöÖåÅüÜ-]{3,}[ ]+))?((?:[a-zA-ZäÄåÅöÖüÜ]\\.[ ]*)|(?:[a-zA-ZäÄöÖåÅüÜ-]{3,}[ ]+))*([_a-zA-ZäÄöÖåÅüÜ-]{3,})$" AS ?nimiregex)
       BIND(REPLACE(REPLACE(?n_ngram, ?nimiregex, "$4"), "_", " ") AS ?family_name)
       BIND(REPLACE(REPLACE(?n_ngram, ?nimiregex, "$1"), "^(.*?)[ ]*$", "$1") AS ?ngrametu)

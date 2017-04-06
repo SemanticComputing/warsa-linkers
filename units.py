@@ -51,6 +51,9 @@ def roman_repl_w_space(m):
 
 def preprocessor(text, *args):
 
+    # Remove quotation marks
+    text = text.replace('"', '')
+
     # E.g. URR:n -> URR
     text = re.sub(r'(?<=\w):\w*', '', text)
 

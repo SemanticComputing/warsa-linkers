@@ -13,13 +13,15 @@ SELECT DISTINCT ?id ?label ?ngram ?war {
     VALUES ?ngram {
       <VALUES>
     }
-    BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
+    BIND(REPLACE(?ngram,'\\.$', '') AS ?qlabel)
+    BIND(CONCAT('"',REPLACE(?qlabel,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
     GRAPH <http://ldf.fi/warsa/actors> { ?rid text:query ?qstring . }
   } UNION {
     VALUES ?ngram {
       <VALUES>
     }
-    ?rid actors:covernumber ?ngram .
+    BIND(REPLACE(?ngram,'\\.$', '') AS ?qlabel)
+    ?rid actors:covernumber ?qlabel .
   }
   {
     ?rid a/rdfs:subClassOf* atypes:MilitaryUnit .
@@ -31,6 +33,6 @@ SELECT DISTINCT ?id ?label ?ngram ?war {
   }
   ?rid rdfs:label|skos:prefLabel|skos:altLabel|actors:covernumber ?label .
 
-  FILTER(LCASE(REPLACE(STR(?label), ",", ""))=LCASE(REPLACE(STR(?ngram), ",", '')))
+  FILTER(LCASE(REPLACE(STR(?label), ",", ""))=LCASE(REPLACE(STR(?qlabel), ",", '')))
   OPTIONAL { ?id <http://ldf.fi/warsa/actors/hasConflict> ?war . }
 }
