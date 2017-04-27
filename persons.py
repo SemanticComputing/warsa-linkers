@@ -992,8 +992,10 @@ def handle_specific_people(text):
 
     text = re.sub(r'Blick(\b|ille|in)', 'Aarne Leopold Blick', text)
     text = re.sub(r'^Nenonen\b', 'kenraalikunta Nenonen', text)
+
     # Some young guy in one photo
     text = text.replace('majuri V.Tuompo', '#')
+
     text = text.replace('Tuompo, Viljo Einar', 'kenraalikunta Tuompo')
     text = text.replace('Erfurth & Tuompo', 'kenraalikunta Erfurth ja kenraalikunta Tuompo')
     text = text.replace('Wuolijoki', '# Hella Wuolijoki')
@@ -1047,6 +1049,7 @@ def handle_specific_people(text):
     text = text.replace('Sotamies Pihlajamaa', 'sotamies Väinö Pihlajamaa')
 
     text = text.replace('Koskimaan', 'Koskimaa')
+    text = re.sub(r'Murole\w+\b', 'Murole', text)
 
     return text
 
@@ -1160,10 +1163,12 @@ name_re = (r'^((?:[a-zA-ZäÄåÅöÖ]\.[ ]*)|(?:[' + ALLOWED_NAME_CHARS +
 name_re_compiled = re.compile(name_re)
 
 remove_period_re = re.compile(r'\.$')
+remove_parenetheses_re = re.compile(r'[)(]')
 
 
 def pruner(candidate):
     candidate = remove_period_re.sub('', candidate)
+    candidate = remove_parenetheses_re.sub('', candidate)
     if name_re_compiled.fullmatch(candidate):
         return candidate
     return None

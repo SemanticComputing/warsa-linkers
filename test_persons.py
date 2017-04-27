@@ -1072,6 +1072,8 @@ class TestPersonValidation(TestCase):
             'vänrikki N. Vuolle vänrikki Y. Nuortio, kersantti T. Aspegren kersantti H. Kalliaisenaho, '
             'alikersantti L. Nousiainen, alikersantti V. Launonen alikersantti Salmi sekä '
             'korpraali R. Keihta.')
+        self.assertEqual(preprocessor("Majuri Muroletta"), 'Majuri Murole')
+        self.assertEqual(preprocessor("osaston komentajalle majuri Murolelle joukkojensa"), 'osaston komentajalle majuri Murole joukkojensa')
 
     def test_pruner(self):
         self.assertEqual(pruner('Kenraali Engelbrecht'), 'Kenraali Engelbrecht')
@@ -1101,6 +1103,8 @@ class TestPersonValidation(TestCase):
         self.assertEqual(pruner('kenraalimajuri talvela'), None)
         self.assertEqual(pruner('Wipert von_Bücher'), 'Wipert von_Bücher')
         self.assertEqual(pruner('amiraali von_Bonin'), 'amiraali von_Bonin')
+        self.assertEqual(pruner('Hilma Katariina (Katri) Salmela'), 'Hilma Katariina Katri Salmela')
+        self.assertEqual(pruner('T. Talvela.'), 'T. Talvela')
 
     def test_replace_sv_list(self):
         self.assertEqual(persons.replace_sv_list("TK-rintamakirjeenvaihtaja Yläjärvellä (vas. Sot.virk. Kapra, Jalkanen, vänr. Rahikainen)."), 'TK-rintamakirjeenvaihtaja Yläjärvellä (vas.  sotilasvirkamies Kapra, sotilasvirkamies Jalkanen,vänr. Rahikainen).')

@@ -8,7 +8,7 @@ SELECT DISTINCT ?id ?label ?ngram ?war {
   VALUES ?ngram {
     <VALUES>
   }
-  FILTER(STRLEN(?ngram)>2 && UCASE(SUBSTR(?ngram,1,1))=SUBSTR(?ngram,1,1))
+  FILTER(STRLEN(?ngram)>2)
   {
     VALUES ?ngram {
       <VALUES>
@@ -22,6 +22,7 @@ SELECT DISTINCT ?id ?label ?ngram ?war {
     }
     BIND(REPLACE(?ngram,'\\.$', '') AS ?qlabel)
     ?rid actors:covernumber ?qlabel .
+    BIND(?rid AS ?id)
   }
   {
     ?rid a/rdfs:subClassOf* atypes:MilitaryUnit .
@@ -33,6 +34,6 @@ SELECT DISTINCT ?id ?label ?ngram ?war {
   }
   ?rid rdfs:label|skos:prefLabel|skos:altLabel|actors:covernumber ?label .
 
-  FILTER(LCASE(REPLACE(STR(?label), ",", ""))=LCASE(REPLACE(STR(?qlabel), ",", '')))
+  FILTER(LCASE(REPLACE(STR(?label), "[,\\s]", ""))=LCASE(REPLACE(STR(?qlabel), "[,\\s]", '')))
   OPTIONAL { ?id <http://ldf.fi/warsa/actors/hasConflict> ?war . }
 }

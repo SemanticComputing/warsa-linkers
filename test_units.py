@@ -120,7 +120,7 @@ class TestUnitDisambiguation(TestCase):
         self.assertTrue(self.validator.check_cover('not a number', ''))
 
     def test_preprocessor(self):
-        self.assertEqual(preprocessor("Klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus Kotkan lohkoa vastaan."), 'klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus Kotkan lohkoa vastaan.')
+        self.assertEqual(preprocessor("Klo 8.52 ilmahälytys Viipurissa ja klo 9 pommitus KLo:a vastaan."), '8.52 ilmahälytys Viipurissa ja 9 pommitus KLo vastaan.')
         self.assertEqual(preprocessor("7 div.komendörs"), '7. D komendörs')
         self.assertEqual(preprocessor("Tyk.K/JR22:n hyökkäyskaistaa."), 'TykK/JR 22 hyökkäyskaistaa. # JR 22')
         self.assertEqual(preprocessor("1/JR 10:ssä."), 'I/JR 10. # JR 10')

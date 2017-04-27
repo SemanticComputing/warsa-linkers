@@ -58,7 +58,7 @@ def preprocessor(text, *args):
     text = re.sub(r'(?<=\w):\w*', '', text)
 
     # KLo = Kotkan Lohko, 'Klo' will match
-    text = re.sub(r'\bKlo\b', 'klo', text)
+    text = re.sub(r'\b[Kk]lo\b', '', text)
 
     # TykK
     text = re.sub(r'\b[Tt]yk\.K\b', 'TykK', text)
@@ -99,13 +99,6 @@ def preprocessor(text, *args):
     text = re.sub(r'\b(Le?Lv)\.?\s*(\d+)', r'LLv \2 # LeLv \2', text, flags=re.I)
     text = re.sub(r'\b(\d+)\.?\s*(Le?Lv)', r'LLv \1 # LeLv \1', text, flags=re.I)
 
-    # Match super unit as well
-    for m in re.finditer(r'(?<=/)([A-Z]+\.?\s*\d+)', text):
-        text += ' # {}'.format(m.group(0))
-
-    for m in re.finditer(r'(?<=/)([0-9]+\.\s*\w+)', text):
-        text += ' # {}'.format(m.group(0))
-
     text = text.strip()
     text = re.sub(r'\s+', ' ', text)
 
@@ -134,7 +127,7 @@ class Validator:
         if re.search(cover + self.cover_re, text, re.I):
             return False
 
-        logger.info('Matched by cover number ({})')
+        logger.info('Matched by cover number ({})'.format(cover))
         return True
 
     def validate(self, results, text, s):
