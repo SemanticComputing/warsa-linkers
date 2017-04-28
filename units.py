@@ -174,6 +174,7 @@ ignore = (
     'Turku',
     'suursaari',
     'tor',
+    'vrt',
 )
 
 
