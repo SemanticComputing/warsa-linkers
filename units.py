@@ -1,7 +1,7 @@
 import re
 import sys
 import logging
-from collections import OrderedDict
+import roman
 from rdflib import URIRef
 from arpa_linker.link_helper import process_stage
 
@@ -10,43 +10,20 @@ logger = logging.getLogger('arpa_linker.arpa')
 WINTER_WAR_PERIODS = set(('<http://ldf.fi/warsa/conflicts/WinterWar>',
             '<http://ldf.fi/warsa/conflicts/InterimPeace>',))
 
-# Roman numeral handling from http://stackoverflow.com/a/28777781/4321262
-
-roman = OrderedDict()
-roman[1000] = "M"
-roman[900] = "CM"
-roman[500] = "D"
-roman[400] = "CD"
-roman[100] = "C"
-roman[90] = "XC"
-roman[50] = "L"
-roman[40] = "XL"
-roman[10] = "X"
-roman[9] = "IX"
-roman[5] = "V"
-roman[4] = "IV"
-roman[1] = "I"
-
-
-def to_roman_numeral(num):
-    def roman_num(num):
-        for r in roman.keys():
-            x, y = divmod(num, r)
-            yield roman[r] * x
-            num -= (r * x)
-            if num > 0:
-                roman_num(num)
-            else:
-                break
-    return "".join([a for a in roman_num(num)])
-
 
 def roman_repl(m):
-    return to_roman_numeral(int(m.group(1)))
+    return roman.toRoman(int(m.group(1)))
 
 
 def roman_repl_w_space(m):
     return '{} '.format(roman_repl(m))
+
+
+def int_from_roman_repl(m):
+    try:
+        return str(roman.fromRoman(m.group(1)))
+    except roman.InvalidRomanNumeralError:
+        return ''
 
 
 def preprocessor(text, *args):
@@ -72,15 +49,11 @@ def preprocessor(text, *args):
     # J.R. -> JR
     text = re.sub(r'\bJ\.[Rr]\.?\s*(?=\d)', 'JR ', text)
     # JR, JP
-    text = re.sub(r'\b(J[RrPp])\.?(?=\d|I)', r'\1 ', text)
+    text = re.sub(r'\b(J[RrPp])\.?(?=\d|I|V)', r'\1 ', text)
     # JR/55 -> JR 55
     text = re.sub(r'\b(?<=J[Rr])/(?=\d)', ' ', text)
 
-    text = re.sub(r'\b(?<=J[RrPp] )I', '1', text)
-    text = re.sub(r'\b(?<=J[RrPp] )II', '2', text)
-
-    text = re.sub(r'\b(?<=J[RrPp] )I', '1', text)
-    text = re.sub(r'\b(?<=J[RrPp] )II', '2', text)
+    text = re.sub(r'\b(?<=J[RrPp] )([IVX]+)', int_from_roman_repl, text)
 
     text = re.sub(r'\b(\d+)\.?\s*(?=/J[Rr])', roman_repl, text)
 
