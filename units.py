@@ -55,7 +55,7 @@ def preprocessor(text, *args):
 
     text = re.sub(r'\b(?<=J[RrPp] )([IVX]+)', int_from_roman_repl, text)
 
-    text = re.sub(r'\b(\d+)\.?\s*(?=/J[Rr])', roman_repl, text)
+    text = re.sub(r'\b(\d+)\.?\s*/J[Rr]', r'\1./JR', text)
 
     # AK, AKE
     text = re.sub(r'\b(\d+)\.?\s*(?=AKE)', roman_repl_w_space, text)
@@ -79,10 +79,12 @@ def preprocessor(text, *args):
 
 
 class Validator:
+    accept_cover = True
+
     def __init__(self, graph, *args, **kwargs):
         self.graph = graph
         self.known_covers = (1812, 1814,)
-        self.known_wrong_covers = (1000, 2000, 3000, 4000, 6000, 10000)
+        self.known_wrong_covers = (1000, 2000, 3000, 4000, 6000, 10000, 16)
         self.cover_re = r'\s*(-|valistusta|kpl|kappale(tta|en)|tonni[na]?|(m(etri([än]|stä)?|eter)?)|kg|(kilo[na]?)|([lL](itra[an])?)|mk|markkaa|vankia|(watt?i[na]?)|(nime[än])|mie(hen|stä))\b'
 
     def check_cover(self, cover, text):
@@ -93,7 +95,7 @@ class Validator:
             elif cover_int in self.known_wrong_covers:
                 return False
         except ValueError:
-            return True
+            return None
 
         if re.search(r'\bn(\.|oin)?\s*' + cover, text, re.I):
             return False
@@ -124,7 +126,8 @@ class Validator:
 
         units = []
         for r in res:
-            if not self.check_cover(r['label'], original_text):
+            cover_check = self.check_cover(r['label'], original_text)
+            if cover_check is False or cover_check is True and self.accept_cover is False:
                 discarded.append(r)
                 logger.info('Reject: cover {} {}'.format(r['label'], r['id']))
                 continue
@@ -148,6 +151,7 @@ ignore = (
     'suursaari',
     'tor',
     'vrt',
+    'ylipäällikkö',
 )
 
 
@@ -156,5 +160,12 @@ if __name__ == '__main__':
         import doctest
         doctest.testmod()
         exit()
+
+    if sys.argv[-1] == 'no_cover':
+        Validator.accept_cover = False
+        sys.argv.pop(-1)
+
+    if sys.argv[4] == 'battle_unit_linked.ttl':
+        ignore = None
 
     process_stage(sys.argv, preprocessor=preprocessor, ignore=ignore, validator_class=Validator, log_level='INFO')
