@@ -110,7 +110,7 @@ class Validator:
             return results
         original_text = self.graph.value(s, URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'))
         logger.info('ORIG: {}'.format(original_text))
-        war = '<{}>'.format(self.graph.value(s, URIRef('http://ldf.fi/warsa/events/related_period')))
+        war = '<{}>'.format(self.graph.value(s, URIRef('http://ldf.fi/schema/warsa/events/related_period')))
         logger.info('War: {} ({})'.format(war, 'talvisota' if war in WINTER_WAR_PERIODS else 'jatkosota'))
         if war in WINTER_WAR_PERIODS:
             res = [r for r in results if set(r['properties'].get('war', [])) & WINTER_WAR_PERIODS]
