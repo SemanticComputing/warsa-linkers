@@ -632,6 +632,52 @@ class TestPersonValidation(TestCase):
 
         self.assertEqual(self.validator.get_source_score(person), 0)
 
+        props = {'source': ['<http://ldf.fi/warsa/sources/source2>', '<http://ldf.fi/warsa/sources/source1>']}
+        person = {'properties': props, 'id': 'id'}
+
+        self.assertEqual(self.validator.get_source_score(person), 1)
+
+
+        props = {'source': ['<http://ldf.fi/warsa/sources/source5>', '<http://ldf.fi/warsa/sources/source10>']}
+        person = {'properties': props, 'id': 'id'}
+
+        self.assertEqual(self.validator.get_source_score(person), 3)
+
+        props = {'source': [
+            '<http://ldf.fi/warsa/sources/source1>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source10>']}
+        person = {'properties': props, 'id': 'id'}
+
+        self.assertEqual(self.validator.get_source_score(person), 3)
+
+        props = {'source': [
+            '<http://ldf.fi/warsa/sources/source1>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source10>']}
+        person = {'properties': props, 'id': 'id'}
+
+        self.assertEqual(self.validator.get_source_score(person), 3)
+
+        props = {'source': [
+            '<http://ldf.fi/warsa/sources/source1>',
+            '<http://ldf.fi/warsa/not/a/source>',
+            '<http://ldf.fi/warsa/sources/source5>',
+            '<http://ldf.fi/warsa/sources/source10>']}
+        person = {'properties': props, 'id': 'id'}
+
+        self.assertEqual(self.validator.get_source_score(person), 3)
+
+        props = {'source': ['<http://ldf.fi/warsa/not/a/source>']}
+        person = {'properties': props, 'id': 'id'}
+
+        self.assertEqual(self.validator.get_source_score(person), 0)
+
     def test_get_unit_score(self):
         unit = '<http://ldf.fi/warsa/actors/actor_2942>'
         props = {'unit': [unit]}

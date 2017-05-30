@@ -8,7 +8,6 @@ PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX cas: <http://ldf.fi/schema/narc-menehtyneet1939-45/>
 PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX dc: <http://purl.org/dc/elements/1.1/>
 
 SELECT DISTINCT ?id ?ngram (COALESCE(?nlabel, ?plabel) AS ?label) ?first_names ?family_name (COALESCE(?hierarchy_label, 'NA') AS ?hierarchy)
 (COALESCE(?promotion_rank, 'NA') AS ?rank) (COALESCE(?rank_lvl, 0) AS ?rank_level) (COALESCE(?earliest_promotion_time, 'NA') AS ?promotion_date)
@@ -104,6 +103,6 @@ WHERE {
     ?id (crm:P70i_is_documented_in|^crm:P70_documents)/cas:kuolinaika ?death_date .
   }
   OPTIONAL {
-    ?id dc:source ?source .
+    ?id dct:source ?source .
   }
 }

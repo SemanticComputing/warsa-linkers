@@ -626,7 +626,7 @@ class Validator:
         if not sources:
             return 0
 
-        score = max([SOURCES.get(s, 0) for s in sources])
+        score = sum([SOURCES.get(s, 0) for s in sources])
         # Give one extra point if the person has multiple sources
         score += 1 if len(sources) > 1 else 0
         return score
