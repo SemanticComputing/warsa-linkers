@@ -4,6 +4,7 @@ import logging
 import roman
 from rdflib import URIRef
 from arpa_linker.link_helper import process_stage
+from persons import get_ranked_matches
 
 logger = logging.getLogger('arpa_linker.arpa')
 
@@ -26,6 +27,16 @@ def int_from_roman_repl(m):
         return ''
 
 
+def get_match_scores(results):
+    rd = get_ranked_matches(results)
+    res = {}
+    for k, v in rd.items():
+        for uri in v['uris']:
+            res[uri] = False if v['score'] < 0 else True
+
+    return res
+
+
 def preprocessor(text, *args):
 
     # Remove quotation marks
@@ -34,7 +45,10 @@ def preprocessor(text, *args):
     # E.g. URR:n -> URR
     text = re.sub(r'(?<=\w):\w*', '', text)
 
-    # KLo = Kotkan Lohko, 'Klo' will match
+    # Remove whitespace before and after a /
+    text = re.sub(r'\s*/\s*', '/', text)
+
+    # KLo = Kotkan Lohko, 'Klo' would match
     text = re.sub(r'\b[Kk]lo\b', '', text)
 
     # TykK
@@ -72,6 +86,11 @@ def preprocessor(text, *args):
     text = re.sub(r'\b(Le?Lv)\.?\s*(\d+)', r'LLv \2 # LeLv \2', text, flags=re.I)
     text = re.sub(r'\b(\d+)\.?\s*(Le?Lv)', r'LLv \1 # LeLv \1', text, flags=re.I)
 
+    # Swedish
+    text = re.sub(r"´s", '', text)
+
+    text = re.sub(r'[´`]', '', text)
+
     text = text.strip()
     text = re.sub(r'\s+', ' ', text)
 
@@ -80,6 +99,7 @@ def preprocessor(text, *args):
 
 class Validator:
     accept_cover = True
+    filter_by_length = True
 
     def __init__(self, graph, *args, **kwargs):
         self.graph = graph
@@ -105,34 +125,42 @@ class Validator:
         logger.info('Matched by cover number ({})'.format(cover))
         return True
 
-    def validate(self, results, text, s):
-        if not results:
-            return results
-        original_text = self.graph.value(s, URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'))
-        logger.info('ORIG: {}'.format(original_text))
-        war = '<{}>'.format(self.graph.value(s, URIRef('http://ldf.fi/schema/warsa/events/related_period')))
-        logger.info('War: {} ({})'.format(war, 'talvisota' if war in WINTER_WAR_PERIODS else 'jatkosota'))
+    def get_units_by_war(self, results, war):
         if war in WINTER_WAR_PERIODS:
             res = [r for r in results if set(r['properties'].get('war', [])) & WINTER_WAR_PERIODS]
         else:
             res = [r for r in results if set(r['properties'].get('war', [])) - WINTER_WAR_PERIODS]
 
+        return res
+
+    def validate(self, results, text, s):
+        if not results:
+            return results
+        original_text = self.graph.value(s, URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'))
+        logger.info('ORIG: {}'.format(original_text))
+
+        war = '<{}>'.format(self.graph.value(s, URIRef('http://ldf.fi/schema/warsa/events/related_period')))
+        logger.info('War: {} ({})'.format(war, 'talvisota' if war in WINTER_WAR_PERIODS else 'jatkosota'))
+
         units_no_war = [r for r in results if r['properties'].get('war') is None]
-        res += units_no_war
+        res = self.get_units_by_war(results, war) + units_no_war
 
         discarded = [r['id'] for r in results if r not in res]
         if discarded:
             logger.info('Reject: wrong period {}'.format(discarded))
 
         units = []
+        ranked_matches = get_match_scores(res)
         for r in res:
             cover_check = self.check_cover(r['label'], original_text)
             if cover_check is False or cover_check is True and self.accept_cover is False:
                 discarded.append(r)
                 logger.info('Reject: cover {} {}'.format(r['label'], r['id']))
-                continue
-
-            units.append(r)
+            elif self.filter_by_length and ranked_matches.get(r['id'], True) is False:
+                discarded.append(r)
+                logger.info('Reject: short match {} {}'.format(r['label'], r['id']))
+            else:
+                units.append(r)
 
         if discarded:
             logger.info('Rejected: {}'.format(discarded))
@@ -161,11 +189,21 @@ if __name__ == '__main__':
         doctest.testmod()
         exit()
 
-    if sys.argv[-1] == 'no_cover':
+    special_args = sys.argv[-2:]
+    if 'no_cover' in special_args:
         Validator.accept_cover = False
-        sys.argv.pop(-1)
+        sys.argv.remove('no_cover')
+    if 'no_length_filter' in special_args:
+        Validator.filter_by_length = False
+        sys.argv.remove('no_length_filter')
+
+    prep = preprocessor
+    if sys.argv[-1] == 'naive':
+        prep = None
+        ignore = None
+        sys.argv.pop()
 
     if sys.argv[4] == 'battle_unit_linked.ttl':
         ignore = None
 
-    process_stage(sys.argv, preprocessor=preprocessor, ignore=ignore, validator_class=Validator, log_level='INFO')
+    process_stage(sys.argv, preprocessor=prep, ignore=ignore, validator_class=Validator, log_level='INFO')

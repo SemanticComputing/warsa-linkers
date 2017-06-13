@@ -7,8 +7,8 @@ SELECT DISTINCT ?id ?ngram ?label ?firstNames ?familyName {
   VALUES ?ngram {
     <VALUES>
   }
-  BIND(CONCAT('"',?ngram,'"') AS ?qstring)
-  GRAPH <http://ldf.fi/warsa/actors> { ?id text:query ?qstring . }
+  BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
+  GRAPH <http://ldf.fi/warsa/persons> { ?id text:query ?qstring . }
   ?id foaf:familyName ?familyName .
   FILTER(str(?familyName) = ?ngram)
   ?id skos:prefLabel ?label .

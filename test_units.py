@@ -7,7 +7,7 @@ import sys
 from unittest import TestCase
 from rdflib import Graph, URIRef
 
-from units import Validator, preprocessor
+from units import Validator, preprocessor, get_match_scores
 
 
 def setUpModule():
@@ -159,6 +159,28 @@ class TestUnitDisambiguation(TestCase):
         self.assertEqual(preprocessor("8./JR II"), '8./JR 2')
         self.assertEqual(preprocessor("JR II"), 'JR 2')
         self.assertEqual(preprocessor("JR IV"), 'JR 4')
+        self.assertEqual(preprocessor("Nyhamn´in linnakkeen"), 'Nyhamnin linnakkeen')
+        self.assertEqual(preprocessor("JR 50´s avresa"), 'JR 50 avresa')
+        self.assertEqual(preprocessor("II/ JR 50"), 'II/JR 50')
+
+    def test_get_match_scores(self):
+        props = {
+            'war': ['<http://ldf.fi/warsa/conflicts/WinterWar>'],
+            'label': ['"III/KTR 11"']
+        }
+        unit = {'properties': props, 'matches': ['III/KTR 11'], 'id': 'long'}
+        props = {
+            'war': ['<http://ldf.fi/warsa/conflicts/WinterWar>'],
+            'label': ['"KTR 11"']
+        }
+        unit2 = {'properties': props, 'matches': ['KTR 11'], 'id': 'short'}
+        results = [unit, unit2]
+
+        res = get_match_scores(results)
+
+        self.assertEqual(res['short'], False)
+        self.assertEqual(res['long'], True)
+
 
 if __name__ == '__main__':
     test_suite = unittest.TestSuite()

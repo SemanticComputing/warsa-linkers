@@ -8,7 +8,8 @@ from unittest import TestCase
 from datetime import date
 from rdflib import Graph, URIRef
 
-from persons import Validator, ValidationContext, pruner, preprocessor, MANNERHEIM_RITARIT
+from persons import (Validator, ValidationContext, get_match_scores, pruner,
+        preprocessor, MANNERHEIM_RITARIT)
 
 
 def setUpModule():
@@ -144,7 +145,7 @@ class TestPersonValidation(TestCase):
         person2 = {'properties': props2, 'matches': ['A. Snellman', 'Kenraalimajuri A. Snellman'], 'id': 'general'}
         results = [person, person2]
         ctx = ValidationContext(self.validator.graph, results, None)
-        scores = ctx.get_match_scores(results)
+        scores = get_match_scores(results)
 
         self.assertEqual(scores['general'], 0)
         self.assertEqual(scores['lieutenant'], -20)
@@ -156,7 +157,7 @@ class TestPersonValidation(TestCase):
         person = {'properties': props, 'matches': ['A. Snellman', 'Kenraalimajuri A. Snellman'], 'id': 'general2'}
         results = [person, person2]
         ctx = ValidationContext(self.validator.graph, results, None)
-        scores = ctx.get_match_scores(results)
+        scores = get_match_scores(results)
 
         self.assertEqual(scores['general'], 0)
         self.assertEqual(scores['general2'], 0)
@@ -178,7 +179,7 @@ class TestPersonValidation(TestCase):
         person3 = {'properties': props3, 'matches': ['sotamies Arvi Pesonen', 'Arvi Pesonen'], 'id': 'id3'}
         results = [person, person2, person3]
         ctx = ValidationContext(self.validator.graph, results, None)
-        scores = ctx.get_match_scores(results)
+        scores = get_match_scores(results)
 
         self.assertEqual(scores['id1'], 0)
         self.assertEqual(scores['id2'], 0)
@@ -636,7 +637,6 @@ class TestPersonValidation(TestCase):
         person = {'properties': props, 'id': 'id'}
 
         self.assertEqual(self.validator.get_source_score(person), 1)
-
 
         props = {'source': ['<http://ldf.fi/warsa/sources/source5>', '<http://ldf.fi/warsa/sources/source10>']}
         person = {'properties': props, 'id': 'id'}

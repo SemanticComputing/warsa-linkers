@@ -377,14 +377,21 @@ if __name__ == '__main__':
 
     no_duplicates = [
         'http://www.yso.fi/onto/suo/kunta',
-        'http://ldf.fi/warsa/places/place_types/Kirkonkyla_kaupunki',
-        'http://ldf.fi/warsa/places/place_types/Kyla',
-        'http://ldf.fi/warsa/places/place_types/Vesimuodostuma',
-        'http://ldf.fi/warsa/places/place_types/Maastokohde',
+        'http://ldf.fi/schema/warsa/Town',
+        'http://ldf.fi/schema/warsa/Village',
+        'http://ldf.fi/schema/warsa/Body_of_water',
+        'http://ldf.fi/schema/warsa/Hypsographic_feature',
         'http://ldf.fi/pnr-schema#place_type_540',
         'http://ldf.fi/pnr-schema#place_type_550',
         'http://ldf.fi/pnr-schema#place_type_560',
     ]
+
+    prep = preprocessor
+    if args[-1] == 'naive':
+        prep = None
+        ignore = None
+        no_duplicates = None
+        args.pop()
 
     process_stage(args, ignore=ignore, pruner=pruner_fun, validator_class=Validator,
             preprocessor=preprocessor, remove_duplicates=no_duplicates)

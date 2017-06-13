@@ -1,0 +1,16 @@
+PREFIX text: <http://jena.apache.org/text#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX wsc: <http://ldf.fi/schema/warsa/>
+
+SELECT DISTINCT ?id ?ngram ?label {
+    VALUES ?ngram {
+        <VALUES>
+    }
+    BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
+    GRAPH <http://ldf.fi/warsa/units> { ?id text:query ?qstring . }
+    ?id rdfs:label|skos:prefLabel|skos:altLabel ?label .
+    FILTER(str(?label) = ?ngram)
+    ?id a/rdfs:subClassOf* wsc:Group .
+}

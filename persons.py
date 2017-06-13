@@ -253,6 +253,32 @@ def parse_date(d):
     return datetime.strptime(str_date, "%Y-%m-%d").date()
 
 
+def get_ranked_matches(results):
+    d = {x.get('id'): set(x.get('matches', [])) for x in results}
+    dd = defaultdict(set)
+    for k, v in d.items():
+        for match in v:
+            dd[match].add(k)
+    rd = {}
+    for k in dd.keys():
+        match_list = [s for s in dd.keys() if k in s and k != s]
+        rd[k] = {'score': len(match_list) * -20, 'uris': dd[k]}
+        for r in match_list:
+            st = dd[k] - dd[r]
+            rd[k]['uris'] = st
+    return rd
+
+
+def get_match_scores(results):
+    rd = get_ranked_matches(results)
+    scores = {}
+    for k, v in rd.items():
+        for uri in v['uris']:
+            scores[uri] = v['score']
+
+    return scores
+
+
 class ValidationContext:
     dataset = ''
 
@@ -266,8 +292,8 @@ class ValidationContext:
         self.units = {'<{}>'.format(u) for u in graph.objects(s, URIRef(unit_uri)) if u}
 
         self.results = results
-        self.ranked_matches = self.get_ranked_matches(results)
-        self.match_scores = self.get_match_scores(results)
+        self.ranked_matches = get_ranked_matches(results)
+        self.match_scores = get_match_scores(results)
 
     def get_s_start_date(self, s):
         def get_event_date():
@@ -294,31 +320,6 @@ class ValidationContext:
             return get_photo_date()
         else:
             raise Exception('Dataset not defined or invalid')
-
-    def get_ranked_matches(self, results):
-        d = {x.get('id'): set(x.get('matches')) for x in results}
-        dd = defaultdict(set)
-        for k, v in d.items():
-            for match in v:
-                dd[match].add(k)
-        rd = {}
-        for k in dd.keys():
-            match_list = [s for s in dd.keys() if k in s and k != s]
-            rd[k] = {'score': len(match_list) * -20, 'uris': dd[k]}
-            for r in match_list:
-                st = dd[k] - dd[r]
-                rd[k]['uris'] = st
-        return rd
-
-    def get_match_scores(self, results):
-        rd = self.get_ranked_matches(results)
-        scores = {}
-        for k, v in rd.items():
-            for uri in v['uris']:
-                scores[uri] = v['score']
-
-        return scores
-
 
 class Validator:
     def __init__(self, graph, *args, **kwargs):
@@ -1195,5 +1196,11 @@ if __name__ == '__main__':
 
     args = sys.argv[0:1] + sys.argv[2:]
 
+    prep = preprocessor
+    if args[-1] == 'naive':
+        prep = None
+        ignore = None
+        args.pop()
+
     process_stage(args, ignore=ignore, validator_class=Validator,
-            preprocessor=preprocessor, pruner=pruner, log_level='INFO')
+            preprocessor=prep, pruner=pruner, log_level='INFO')

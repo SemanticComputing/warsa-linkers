@@ -3,7 +3,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX hipla: <http://ldf.fi/schema/hipla/>
 PREFIX places: <http://ldf.fi/warsa/places>
-PREFIX ptype: <http://ldf.fi/warsa/places/place_types/>
+PREFIX wsc: <http://ldf.fi/schema/warsa/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 SELECT ?id ?label ?ngram ?type
 {
@@ -12,7 +12,7 @@ SELECT ?id ?label ?ngram ?type
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',?ngram,'"') AS ?qstring)
+      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring ;
           a ?type ;
           rdfs:label|skos:prefLabel ?label .
@@ -23,16 +23,16 @@ SELECT ?id ?label ?ngram ?type
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',?ngram,'"') AS ?qstring)
+      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring ;
           a ?type ;
           rdfs:label|skos:prefLabel ?label .
       FILTER(str(?label) = ?ngram)
       MINUS {
-        ?id a ptype:Rakennettu_kohde .
+        ?id a wsc:Man-made_feature .
       }
       MINUS {
-        ?id a ptype:Symboli .
+        ?id a wsc:Symbol .
       }
     }
   } UNION {
@@ -40,7 +40,7 @@ SELECT ?id ?label ?ngram ?type
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',?ngram,'"') AS ?qstring)
+      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring .
       ?id a ?type .
       FILTER(?type = <http://ldf.fi/pnr-schema#place_type_560> ||

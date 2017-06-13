@@ -9,7 +9,7 @@ SELECT ?id ?label ?ngram ?type
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',?ngram,'"') AS ?qstring)
+      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring ;
           a ?type ;
           rdfs:label|skos:prefLabel ?label .
@@ -20,7 +20,7 @@ SELECT ?id ?label ?ngram ?type
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',?ngram,'"') AS ?qstring)
+      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring ;
           a ?type ;
           rdfs:label|skos:prefLabel ?label .
@@ -31,7 +31,7 @@ SELECT ?id ?label ?ngram ?type
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',?ngram,'"') AS ?qstring)
+      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring .
       ?id a ?type .
       ?id rdfs:label|skos:prefLabel ?label .
