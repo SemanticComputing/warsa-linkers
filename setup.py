@@ -17,6 +17,7 @@ setup(
     packages=['warsa_linkers'],
     install_requires=[
         'rdflib >= 4.2.0',
-        'requests >= 2.7.0'
+        'requests >= 2.7.0',
+        'roman'
     ],
 )

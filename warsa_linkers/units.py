@@ -1,15 +1,21 @@
+import os
 import re
 import sys
 import logging
 import roman
 from rdflib import URIRef
 from arpa_linker.link_helper import process_stage
-from persons import get_ranked_matches
+from warsa_linkers.persons import get_ranked_matches
 
 logger = logging.getLogger('arpa_linker.arpa')
 
 WINTER_WAR_PERIODS = set(('<http://ldf.fi/warsa/conflicts/WinterWar>',
             '<http://ldf.fi/warsa/conflicts/InterimPeace>',))
+
+
+def get_query_template():
+    with open(os.path.join(os.path.dirname(__file__), 'units.sparql')) as f:
+        return f.read()
 
 
 def roman_repl(m):
