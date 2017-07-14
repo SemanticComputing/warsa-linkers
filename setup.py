@@ -15,6 +15,7 @@ setup(
     url="https://github.com/SemanticComputing/warsa-linkers",
     long_description=read('README.md'),
     packages=['warsa_linkers'],
+    package_data={'': ['*.sparql']},
     install_requires=[
         'rdflib >= 4.2.0',
         'requests >= 2.7.0',
