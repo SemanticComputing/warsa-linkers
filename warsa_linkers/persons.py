@@ -321,6 +321,7 @@ class ValidationContext:
         else:
             raise Exception('Dataset not defined or invalid')
 
+
 class Validator:
     def __init__(self, graph, *args, **kwargs):
         self.graph = graph
@@ -986,7 +987,7 @@ def process_lists(text):
 def handle_specific_people(text):
     # Mannerheim
     text = text.replace('Fältmarsalk', 'sotamarsalkka')
-    text = re.sub(r'(?<![Ss]otamarsalkka )(?<![Mm]arsalkka )Mannerheim(?!-)(in|ille|ia)?\b', '# kenraalikunta Mannerheim #', text)
+    text = re.sub(r'(?<![Ss]otamarsalkka )(?<![Mm]arsalkka )Mannerheim(?!-)(?! Cross)(?! Line)(in|ille|ia)?\b', '# kenraalikunta Mannerheim #', text)
     text = re.sub(r'([Ss]ota)?[Mm]arsalk(ka|an|alle|en)?\b(?! Mannerheim)', '# kenraalikunta Mannerheim #', text)
     text = re.sub(r'[Yy]lipäällik(kö|ön|ölle|köä|kön)\b', '# kenraalikunta Mannerheim #', text)
     text = re.sub(r'Marski(n|a|lle)?\b', '# kenraalikunta Mannerheim #', text)
@@ -1022,7 +1023,6 @@ def handle_specific_people(text):
     text = re.sub(r'(?<!3\. )(?<!III )(luutnantti|[Vv]änrikki|Lauri Wilhelm) Nissi(nen|sen)\b', '# vänrikki Lauri Nissinen #', text)
     text = text.replace('Cajander', 'Aimo Kaarlo Cajander')
     # Needs tweaking for photos
-    # text = text.replace('E. Mäkinen', '## kenraalimajuri Mäkinen')
     text = re.sub(r'(?<!Aimo )(?<!Aukusti )(?<!Y\.)Tanner', '# Väinö Tanner #', text)
     # text = text.replace('Niukkanen', '## Juho Niukkanen')
     # text = text.replace('Söderhjelm', '## Johan Otto Söderhjelm')
@@ -1036,7 +1036,6 @@ def handle_specific_people(text):
     text = text.replace('Öhqvist', 'Öhquist')
     text = text.replace('Jörgen Hageman', 'Jörgen Hagemann')
     # Only relevant in events
-    text = re.sub('[Ee]verstiluutnantti M. Nurmi', 'eversti Martti Nurmi', text)
     text = re.sub('[VW]inell(in|ille|illa|ia|ista)', 'Winell', text)
     text = text.replace('Heinrichsin', 'Heinrichs')
     text = text.replace('Laiva Josif Stalin', '#')
@@ -1203,4 +1202,4 @@ if __name__ == '__main__':
         args.pop()
 
     process_stage(args, ignore=ignore, validator_class=Validator,
-            preprocessor=prep, pruner=pruner, log_level='INFO')
+            preprocessor=prep, pruner=pruner, log_level='DEBUG')

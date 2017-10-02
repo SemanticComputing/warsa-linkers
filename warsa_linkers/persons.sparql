@@ -41,6 +41,7 @@ WHERE {
                       crm:P11_had_participant ?id ;
                       wacs:hasRank ?promotion_rank_id .
         ?promotion_rank_id skos:prefLabel ?promotion_rank .
+        FILTER(langMatches(LANG(?promotion_rank), "fi"))
         OPTIONAL {
           ?promotion_rank_id dct:isPartOf/skos:prefLabel ?hierarchy_label .
         }
