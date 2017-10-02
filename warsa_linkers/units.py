@@ -5,7 +5,7 @@ import logging
 import roman
 from rdflib import URIRef
 from arpa_linker.link_helper import process_stage
-from warsa_linkers.persons import get_ranked_matches
+from persons import get_ranked_matches
 
 logger = logging.getLogger('arpa_linker.arpa')
 
@@ -186,6 +186,7 @@ ignore = (
     'tor',
     'vrt',
     'ylipäällikkö',
+    'rauma',
 )
 
 

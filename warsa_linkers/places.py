@@ -72,6 +72,15 @@ def preprocessor(text, *args):
     text = re.sub(r'Sommee(n?|s[st]a)?\b', 'Sommee', text)
     text = re.sub(r'Muolaa(n?|s[st]a)?\b', 'Muolaa', text)
 
+    text = re.sub(r'Koivusiltaan', 'Koivusilta', text)
+
+    text = re.sub(r'Raattee(n|s[st]a|lla)\b', 'Raate', text)
+
+    text = re.sub(r'Summa(n|s[st]a|an)\b', 'Paikka Summa', text)
+    text = re.sub(r'(Tali|Pasuri)(n|s[st]a|in)\b', 'Paikka Tali', text)
+    text = re.sub(r'Suojärve(n|stä|en)\b', 'Paikka Suojärvi', text)
+    text = re.sub(r'Han(ko(on|a)?|go(s[st]a|n))\b', 'Paikka Hanko', text)
+
     text = re.sub(r'Helsingi(n?|s[st]ä)\b', 'Helsinki', text)
     text = re.sub(r'Repolasta', 'Repola', text)
     text = re.sub(r'Bio Rex(in|iss[aä])?', 'Helsinki', text)
@@ -114,8 +123,8 @@ def pruner(text):
     """
     if not text[0].isupper():
         return None
-    if nen_re.search(text):
-        return None
+    # if nen_re.search(text):
+        # return None
     return text
 
 
@@ -306,6 +315,11 @@ if __name__ == '__main__':
         'tarkka',
         'asemi',
         'kauko',
+        'piste',
+        'karjala',
+        'mylly',
+        'kolma',
+        'sotku',
         'ruotsinsalmi',  # boat
         'riilahti',  # boat
         # 'maaselkä',  # the proper one does not exist yet
@@ -332,7 +346,7 @@ if __name__ == '__main__':
         'hietala',
         'puhakka',
         'helppi',
-        'lehtovaara',
+        # 'lehtovaara',
         'mäkelä',
         'palho',
         'härmälä',
