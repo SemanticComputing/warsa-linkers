@@ -8,44 +8,44 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 SELECT ?id ?label ?ngram ?type
 {
   {
-    GRAPH <http://ldf.fi/warsa/places/municipalities> {
+    VALUES ?ngram {
+      <VALUES>
+    }
+    BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
+    ?id text:query ?qstring .
+    VALUES ?g {
+      <http://ldf.fi/warsa/places/karelian_places>
+      <http://ldf.fi/warsa/places/municipalities>
+    }
+    GRAPH ?g {
       VALUES ?ngram {
         <VALUES>
       }
-      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
-      ?id text:query ?qstring ;
-          a ?type ;
-          rdfs:label|skos:prefLabel ?label .
+      ?id rdfs:label|skos:prefLabel|skos:altLabel ?label ;
+                                   a ?type .
       FILTER(str(?label) = ?ngram)
     }
-  } UNION {
-    GRAPH <http://ldf.fi/warsa/places/karelian_places> {
-      VALUES ?ngram {
-        <VALUES>
-      }
-      BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
-      ?id text:query ?qstring ;
-          a ?type ;
-          rdfs:label|skos:prefLabel ?label .
-      FILTER(str(?label) = ?ngram)
-      MINUS {
-        ?id a wsc:Man-made_feature .
-      }
-      MINUS {
-        ?id a wsc:Symbol .
-      }
+    MINUS {
+      ?id a wsc:Man-made_feature .
     }
-  } UNION {
-    SERVICE <http://localhost:3030/pnr/sparql> {
+    MINUS {
+      ?id a wsc:Symbol .
+    }
+  }
+  UNION
+  {
+    SERVICE <http://172.18.0.3:3030/pnr/sparql> {
       VALUES ?ngram {
         <VALUES>
       }
       BIND(CONCAT('"',REPLACE(?ngram,"([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\/\\\\])","\\\\$1"),'"') AS ?qstring)
       ?id text:query ?qstring .
+      VALUES ?type {
+        <http://ldf.fi/pnr-schema#place_type_560>
+        <http://ldf.fi/pnr-schema#place_type_550>
+        <http://ldf.fi/pnr-schema#place_type_540>
+      }
       ?id a ?type .
-      FILTER(?type = <http://ldf.fi/pnr-schema#place_type_560> ||
-        ?type = <http://ldf.fi/pnr-schema#place_type_550> ||
-        ?type = <http://ldf.fi/pnr-schema#place_type_540>)
       ?id rdfs:label|skos:prefLabel ?label .
       FILTER(STR(?label)=STR(?ngram))
     }

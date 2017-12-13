@@ -3,6 +3,31 @@ import sys
 from arpa_linker.link_helper import process_stage
 
 
+ISLAND_TYPE = 'http://ldf.fi/pnr-schema#place_type_350'
+ISLAND_TYPE_URI = '<{}>'.format(ISLAND_TYPE)
+
+ISLANDS = [
+    'Ahvenanmaa',
+    'Ulko-Tammio',
+    'Morgonlandet'
+]
+
+
+LABEL_TO_PLACE = {
+    'Rautalahti': 'http://ldf.fi/warsa/places/karelian_places/k_place_33031',
+    'Saarijärvi': 'http://ldf.fi/warsa/places/karelian_places/k_place_37458',
+    'Murtovaara': 'http://ldf.fi/pnr/P_10558843',
+    'Myllykoski': 'http://ldf.fi/pnr/P_10130817',
+    'Kuosmala': 'http://ldf.fi/pnr/P_10392668',
+    'Tyrävaara': 'http://ldf.fi/pnr/P_10213175',
+    'Kivivaara': 'http://ldf.fi/pnr/P_10543550',
+    'Kotka': 'http://ldf.fi/pnr/P_10878654',
+    'Malmi': 'http://ldf.fi/pnr/P_10012991',
+    'Kylänmäki': 'http://ldf.fi/pnr/P_10530797',
+    'Käpylä': 'http://ldf.fi/pnr/P_10342681',
+}
+
+
 class Validator:
     def __init__(self, graph, *args, **kwargs):
         self.graph = graph
@@ -10,34 +35,19 @@ class Validator:
     def validate(self, results, text, s):
         if not results:
             return results
-        for i, place in enumerate(results):
+        res = []
+        for place in results:
             label = place.get('label')
-            if label == "Rautalahti":
-                results[i]['id'] = 'http://ldf.fi/warsa/places/karelian_places/k_place_33031'
-            elif label == "Murtovaara":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10558843'
-            elif label == "Saarijärvi":
-                results[i]['id'] = 'http://ldf.fi/warsa/places/karelian_places/k_place_37458'
-            elif label == "Myllykoski":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10130817'
-            elif label == "Kuosmala":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10392668'
-            elif label == "Tyrävaara":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10213175'
-            elif label == "Kivivaara":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10543550'
-            elif "Lieks" in text and label == "Nurmijärvi":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10588451'
-            elif label == "Kotka":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10878654'
-            elif label == "Malmi":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10012991'
-            elif label == "Kylänmäki":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10530797'
-            elif label == "Käpylä":
-                results[i]['id'] = 'http://ldf.fi/pnr/P_10342681'
+            is_island = ISLAND_TYPE_URI in place.get('properties', {}).get('type', [])
+            if is_island and label not in ISLANDS:
+                continue
+            if "Lieks" in text and label == "Nurmijärvi":
+                place['id'] = 'http://ldf.fi/pnr/P_10588451'
+            else:
+                place['id'] = LABEL_TO_PLACE.get(label, place['id'])
+            res.append(place)
 
-        return results
+        return res
 
 
 def preprocessor(text, *args):
@@ -75,13 +85,14 @@ def preprocessor(text, *args):
     text = re.sub(r'Koivusiltaan', 'Koivusilta', text)
 
     text = re.sub(r'Raattee(n|s[st]a|lla)\b', 'Raate', text)
+    text = re.sub(r'Summa(n|s[st]a|an)\b', 'Summa', text)
 
-    text = re.sub(r'Summa(n|s[st]a|an)\b', 'Paikka Summa', text)
-    text = re.sub(r'(Tali|Pasuri)(n|s[st]a|in)\b', 'Paikka Tali', text)
-    text = re.sub(r'Suojärve(n|stä|en)\b', 'Paikka Suojärvi', text)
-    text = re.sub(r'Han(ko(on|a)?|go(s[st]a|n))\b', 'Paikka Hanko', text)
+    text = re.sub(r'(Kannaksen|Aunuksen|Karjalan)\s+([Rr]yhmä|[Aa]rmeija)[a-zäö]*', '', text)
 
-    text = re.sub(r'Helsingi(n?|s[st]ä)\b', 'Helsinki', text)
+    # Karjalankannas is not handled properly by LAS
+    text = re.sub(r'Karjalan\s*[Kk]kanna(s|ksen|ksell[ae]|sta)\b', 'Karjalankannas', text)
+    text = re.sub(r'(Itä-|Länsi-|Keski-)?(?<!än )(?<![mstv]en )Kanna(s|ksen|ksell[ae]|sta)\b', 'Karjalankannas', text)
+
     text = re.sub(r'Repolasta', 'Repola', text)
     text = re.sub(r'Bio Rex(in|iss[aä])?', 'Helsinki', text)
 
@@ -95,6 +106,12 @@ def preprocessor(text, *args):
     text = text.replace('Inkilän kartano', '#')
     text = text.replace('Norjan Kirkkoniem', '#')
     text = text.replace('Pietari Autti', '#')
+
+    # Too many places are interpreted as common nouns when they are the first
+    # word in a sentence, so just prepend a word to the text to counteract this.
+
+    text = text.replace('. ', '. paikka ')
+    text = 'paikka ' + text
 
     text = text.strip()
     text = re.sub(r'\s+', ' ', text)
@@ -136,6 +153,14 @@ if __name__ == '__main__':
 
     ignore = [
         'sillanpää',
+        'ritva',
+        'pellonpää',
+        'pajakoski',
+        'kanto',
+        'talvitie',
+        'narva',
+        'keskimaa',
+        'kisko',
         'saari',
         'p',
         'm',
@@ -398,6 +423,7 @@ if __name__ == '__main__':
         'http://ldf.fi/pnr-schema#place_type_540',
         'http://ldf.fi/pnr-schema#place_type_550',
         'http://ldf.fi/pnr-schema#place_type_560',
+        ISLAND_TYPE, # Selected islands
     ]
 
     prep = preprocessor
