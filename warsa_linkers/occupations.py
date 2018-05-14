@@ -12,31 +12,9 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph, URIRef, RDF
 from rdflib.util import guess_format
 
+from utils import query_sparql
+
 log = logging.getLogger(__name__)
-
-
-def _query_sparql(sparql_obj):
-    """
-    Query SPARQL with retry functionality
-
-    :type sparql_obj: SPARQLWrapper
-    :return: SPARQL query results
-    """
-    results = None
-    retry = 0
-    while not results:
-        try:
-            results = sparql_obj.query().convert()
-        except ValueError:
-            if retry < 10:
-                log.error('Malformed result for query {p_uri}, retrying in 1 second...'.format(
-                    p_uri=sparql_obj.queryString))
-                retry += 1
-                time.sleep(1)
-            else:
-                raise
-    log.debug('Got results {res} for query {q}'.format(res=results, q=sparql_obj.queryString))
-    return results
 
 
 def link_occupations(graph, endpoint, source_property: URIRef, target_property: URIRef, resource_type: URIRef):
@@ -81,7 +59,7 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
     sparql.method = 'POST'
     sparql.setQuery(query.format(values='" "'.join(literals)))
     sparql.setReturnFormat(JSON)
-    results = _query_sparql(sparql)
+    results = query_sparql(sparql)
 
     links = Graph()
     uris = {}
