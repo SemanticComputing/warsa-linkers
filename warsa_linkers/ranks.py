@@ -5,10 +5,10 @@
 from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph, RDF, URIRef
 
-from utils import query_sparql
+from .utils import query_sparql
 
 
-def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
+def link_ranks(graph, endpoint, source_prop, target_prop, class_uri, preprocessing=None):
     """
     Link military ranks in graph.
 
@@ -25,6 +25,7 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
         return rank_mapping[value] if value in rank_mapping else value
 
     rank_mapping = {
+        'aliluutn': 'aliluutnantti',
         'aliluutn.': 'aliluutnantti',
         'alisot.ohj.': 'Alisotilasohjaaja',
         'alisot.virk.': 'Alisotilasvirkamies',
@@ -41,14 +42,17 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
         'ins.maj.': 'Insinöörimajuri',
         'is-mies': 'Ilmasuojelumies',
         'is.stm.': 'Ilmasuojelusotamies',
+        'kaart': 'stm',
         'kapt.luutn.': 'kapteeniluutnantti',
         'kom.kapt.': 'komentajakapteeni',
+        'lääk.alik': 'lääkintäalikersantti',
         'lääk.alikers.': 'Lääkintäalikersantti',
         'lääk.kapt.': 'Lääkintäkapteeni',
         'lääk.kers.': 'Lääkintäkersantti',
         'lääk.korpr.': 'Lääkintäkorpraali',
         'lääk.lotta': 'Lääkintälotta',
         'lääk.maj.': 'Lääkintämajuri',
+        'lääk.stm': 'lääkintäsotamies',
         'lääk.stm.': 'Lääkintäsotamies',
         'lääk.vääp.': 'Lääkintävääpeli',
         'lääk.virk.': 'Lääkintävirkamies',
@@ -75,6 +79,7 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
         'sot.poika': 'Sotilaspoika',
         'sotilasmest.': 'Sotilasmestari',
         'STRM': 'Sturmmann',
+        'ups.kok': 'upseerikokelas',
         'ups.kok.': 'Upseerikokelas',
         'ups.opp.': 'Upseerioppilas',
         'USCHA': 'Unterscharführer',
@@ -95,7 +100,8 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
         }} GROUP BY ?rank
     """
 
-    rank_literals = set(map(preprocess, graph.objects(None, source_prop)))
+    preprocessing = preprocessing or preprocess
+    rank_literals = set(map(preprocessing, graph.objects(None, source_prop)))
 
     sparql = SPARQLWrapper(endpoint)
     sparql.method = 'POST'

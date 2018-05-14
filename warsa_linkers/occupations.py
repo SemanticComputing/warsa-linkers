@@ -5,14 +5,12 @@ import argparse
 import logging
 import re
 
-import time
-
 import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph, URIRef, RDF
 from rdflib.util import guess_format
 
-from utils import query_sparql
+from .utils import query_sparql
 
 log = logging.getLogger(__name__)
 
