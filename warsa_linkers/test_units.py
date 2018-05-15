@@ -7,7 +7,7 @@ import sys
 from unittest import TestCase
 from rdflib import Graph, URIRef
 
-from units import Validator, preprocessor, get_match_scores
+from .units import Validator, preprocessor, get_match_scores
 
 
 def setUpModule():
@@ -22,7 +22,8 @@ class TestUnitDisambiguation(TestCase):
 
     def setUp(self):
         g = Graph()
-        f = os.path.join(sys.path[0], 'test_photo_person.ttl')
+        dire = os.path.dirname(os.path.realpath(__file__))
+        f = os.path.join(dire, 'test_photo_person.ttl')
         g.parse(f, format='turtle')
         self.validator = Validator(g)
 

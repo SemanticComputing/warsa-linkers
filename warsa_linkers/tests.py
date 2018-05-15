@@ -6,7 +6,7 @@ from unittest import mock
 
 from rdflib import URIRef, Graph, Literal, RDF
 
-from occupations import link_occupations
+from .occupations import link_occupations
 
 
 OCCUPATION_LINK_SPARQL_RESULTS = {
@@ -50,7 +50,7 @@ class OccupationTest(unittest.TestCase):
         for p in [p1, p2, p3]:
             graph.add((p, RDF.type, ptype))
 
-        with mock.patch('occupations._query_sparql', side_effect=lambda x: OCCUPATION_LINK_SPARQL_RESULTS):
+        with mock.patch('warsa_linkers.occupations.query_sparql', side_effect=lambda x: OCCUPATION_LINK_SPARQL_RESULTS):
             results = link_occupations(graph, '', source_prop, target_prop, ptype)
 
         self.assertEqual(3, len(results))
