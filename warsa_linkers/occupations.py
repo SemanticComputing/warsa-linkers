@@ -21,6 +21,9 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
 
     :param graph: Data in RDFLib Graph object
     :param endpoint: SPARQL endpoint
+    :param source_property: Source property for linking
+    :param target_property: Property to use for writing found links
+    :param resource_type:
     :return: RDFLib Graph with updated links
     """
 
@@ -53,6 +56,7 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
 
     literals = set(map(preprocess, graph.objects(None, source_property)))
 
+    log.info('Got {n} occupations for linking'.format(n=len(literals)))
     sparql = SPARQLWrapper(endpoint)
     sparql.method = 'POST'
     sparql.setQuery(query.format(values='" "'.join(literals)))
