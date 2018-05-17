@@ -23,7 +23,7 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
     :param endpoint: SPARQL endpoint
     :param source_property: Source property for linking
     :param target_property: Property to use for writing found links
-    :param resource_type:
+    :param resource_type: Class of resources to be linked
     :return: RDFLib Graph with updated links
     """
 

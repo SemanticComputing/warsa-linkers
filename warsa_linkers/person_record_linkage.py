@@ -21,51 +21,36 @@ CRM = Namespace('http://www.cidoc-crm.org/cidoc-crm/')
 DATE_FORMAT = '%Y-%m-%d'
 
 
-def link_persons(graph, endpoint, cas_data):
+def link_persons(graph, endpoint, doc_data, data_fields):
     """
-    Link military persons in graph.
+    Link document records of persons to WarSampo person instances.
 
     :param graph: Data in RDFLib Graph object
     :param endpoint: Endpoint to query persons from
-    :param cas_data:
+    :param doc_data:
     :return: RDFLib Graph with updated links
     """
-
-    data_fields = [
-        {'field': 'given', 'type': 'String'},
-        {'field': 'family', 'type': 'String'},
-        # Birth place is linked, can have multiple values
-        {'field': 'birth_place', 'type': 'Custom', 'comparator': intersection_comparator, 'has missing': True},
-        {'field': 'birth_begin', 'type': 'DateTime', 'has missing': True, 'fuzzy': False},
-        {'field': 'birth_end', 'type': 'DateTime', 'has missing': True, 'fuzzy': False},
-        {'field': 'death_begin', 'type': 'DateTime', 'has missing': True, 'fuzzy': False},
-        {'field': 'death_end', 'type': 'DateTime', 'has missing': True, 'fuzzy': False},
-        {'field': 'activity_end', 'type': 'Custom', 'comparator': activity_comparator, 'has missing': True},
-        {'field': 'rank', 'type': 'Exact', 'has missing': True},
-        {'field': 'rank_level', 'type': 'Price', 'has missing': True},
-    ]
-
-    log.info('Got {} casualty persons'.format(len(cas_data)))
+    log.info('Got {} document records'.format(len(doc_data)))
 
     per_data = _generate_persons_dict(endpoint)
     log.info('Got {} WarSampo persons'.format(len(per_data)))
 
-    cas_data, num_links = get_person_links(cas_data, per_data)
+    doc_data, num_links = get_person_links(doc_data, per_data)
 
     log.info('Got {} person links as training data'.format(num_links))
 
     link_graph = Graph()
     if num_links:
         linker = RecordLink(data_fields)
-        linker.sample(cas_data, per_data, sample_size=len(cas_data) * 2)
-        linker.markPairs(trainingDataLink(cas_data, per_data, common_key='person'))
+        linker.sample(doc_data, per_data, sample_size=len(doc_data) * 2)
+        linker.markPairs(trainingDataLink(doc_data, per_data, common_key='person'))
         linker.train()
 
         with open('output/training_data.json', 'w') as fp:
             linker.writeTraining(fp)
 
-        threshold = linker.threshold(cas_data, per_data, 0.5)  # Set desired recall / precision importance ratio
-        links = linker.match(cas_data, per_data, threshold=threshold)
+        threshold = linker.threshold(doc_data, per_data, 0.5)  # Set desired recall / precision importance ratio
+        links = linker.match(doc_data, per_data, threshold=threshold)
         log.info('Found {} person links'.format(len(links)))
 
         for link in links:
@@ -145,9 +130,9 @@ def get_date_value(date_literal):
             log.warning('Unable to parse date {}'.format(date_literal))
 
 
-def get_person_links(casualties: dict, persons: dict, links_json_file='input/person_links.json'):
+def get_person_links(documents: dict, persons: dict, links_json_file='input/person_links.json'):
     """
-    Read person links from a JSON file generated with generate_training_data.sh
+    Read person links from a JSON file
     """
     with open(links_json_file, 'r') as fp:
         links = json.load(fp)['results']['bindings']
@@ -155,15 +140,15 @@ def get_person_links(casualties: dict, persons: dict, links_json_file='input/per
     num_links = 0
 
     for link in links:
-        cas = link['doc']['value']
+        doc = link['doc']['value']
         per = link['person']['value']
-        if cas in casualties and per in persons:
-            casualties[cas].update({'person': per})
+        if doc in documents and per in persons:
+            documents[doc].update({'person': per})
             num_links += 1
         else:
-            log.warning('Could not find linked person: {} - {}'.format(cas, per))
+            log.warning('Could not find linked person: {} - {}'.format(doc, per))
 
-    return casualties, num_links
+    return documents, num_links
 
 
 def intersection_comparator(field_1, field_2):
