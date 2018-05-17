@@ -18,7 +18,8 @@ log = logging.getLogger(__name__)
 
 CRM = Namespace('http://www.cidoc-crm.org/cidoc-crm/')
 
-DATE_FORMAT = '%Y-%m-%d'
+INPUT_DATE_FORMAT = '%Y-%m-%d'
+ISO_FORMAT = '%Y-%m-%d'
 
 QUERY_WARSA_PERSONS = '''
 PREFIX wsch: <http://ldf.fi/schema/warsa/>
@@ -150,20 +151,21 @@ def _generate_persons_dict(endpoint):
     return persons
 
 
-def get_date_value(date_literal):
+def get_date_value(date_str, date_format=INPUT_DATE_FORMAT):
     """
-    Get date value from literal
+    Validate date values and return them in the format expected by dedupe (string).
+
     >>> get_date_value('1945-02-01')
-    datetime.date(1945, 2, 1)
+    '1945-02-01'
     >>> get_date_value(None)
     >>> get_date_value('1945-02-31')
     >>> get_date_value('1945-02-XX')
     """
-    if date_literal:
+    if date_str:
         try:
-            return datetime.strptime(str(date_literal), DATE_FORMAT).date()
+            return datetime.strptime(str(date_str), date_format).date().isoformat()
         except ValueError:
-            log.warning('Unable to parse date {}'.format(date_literal))
+            log.warning('Unable to parse date {}'.format(date_str))
 
 
 def get_person_links(documents: dict, persons: dict, links_json_file):
@@ -198,22 +200,25 @@ def intersection_comparator(field_1, field_2):
 def activity_comparator(cas_death, per_activity):
     """
     Compare death date with activity time from WarSampo events
-    >>> activity_comparator(datetime(1944, 4, 2), datetime(1944, 4, 2))
+    >>> activity_comparator('1944-04-02', '1944-04-02')
     0
-    >>> activity_comparator(datetime(1944, 4, 12), datetime(1944, 4, 2))
+    >>> activity_comparator('1944-04-12', '1944-04-02')
     0
-    >>> activity_comparator(datetime(1944, 4, 12), datetime(1944, 5, 1))
-    >>> activity_comparator(datetime(1941, 11, 24), datetime(1944, 4, 2))
+    >>> activity_comparator('1944-04-12', '1944-05-01')
+    >>> activity_comparator('1941-11-24', '1944-04-02')
     1
-    >>> activity_comparator(datetime(1944, 4, 12), None)
-    >>> activity_comparator(None, datetime(1944, 5, 14))
+    >>> activity_comparator('1944-04-12', None)
+    >>> activity_comparator('1944-07-12', '1944-05-91')
+    Traceback (most recent call last):
+     ...
+    ValueError: unconverted data remains: 1
     """
     if cas_death and per_activity:
-        if cas_death >= per_activity:
+        death = datetime.strptime(cas_death, ISO_FORMAT)
+        activity = datetime.strptime(per_activity, ISO_FORMAT)
+
+        if death >= activity:
             return 0
-        try:
-            if cas_death + timedelta(days=30) < per_activity:
-                return 1
-        except ValueError:
-            pass
+        if death + timedelta(days=30) < activity:
+            return 1  # Was active after death
 
