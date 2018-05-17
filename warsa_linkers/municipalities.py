@@ -309,16 +309,23 @@ def link_warsa_municipality(warsa_munics: Graph, labels: list):
     """
     Link municipality to Warsa
 
+    :param warsa_munics: Municipality graph for retrieving labels
+    :param labels: Labels of the municipality to be linked
+    :return: list of matches
+
     >>> warsa_munics = Graph()
     >>> warsa_munics.add((URIRef('http://muni/Espoo'), SKOS.prefLabel, Literal("Espoo", lang='fi')))
     >>> warsa_munics.add((URIRef('http://muni/Turku'), SKOS.prefLabel, Literal("Turku")))
     >>> warsa_munics.add((URIRef('http://muni/Uusik'), SKOS.prefLabel, Literal("Uusikaarlepyyn mlk", lang='fi')))
-    >>> link_warsa_municipality(warsa_munics, ['Espoo'])
-    [rdflib.term.URIRef('http://muni/Espoo')]
+    >>> link_warsa_municipality(warsa_munics, ['Espoo', 'Esbo'])
+    rdflib.term.URIRef('http://muni/Espoo')
+    >>> link_warsa_municipality(warsa_munics, ['Åbo', 'Turku'])
+    rdflib.term.URIRef('http://muni/Turku')
     >>> link_warsa_municipality(warsa_munics, ['Turku'])
-    [rdflib.term.URIRef('http://muni/Turku')]
+    rdflib.term.URIRef('http://muni/Turku')
+    >>> link_warsa_municipality(warsa_munics, ['Turku', 'Espoo'])
     >>> link_warsa_municipality(warsa_munics, ['Uusikaarlepyyn kunta'])
-    [rdflib.term.URIRef('http://muni/Uusik')]
+    rdflib.term.URIRef('http://muni/Uusik')
     """
     warsa_matches = []
 
@@ -338,15 +345,16 @@ def link_warsa_municipality(warsa_munics: Graph, labels: list):
             warsa_matches += list(warsa_munics[:SKOS.prefLabel:Literal(lbl.replace(' kunta', ' mlk'))])
             warsa_matches += list(warsa_munics[:SKOS.prefLabel:Literal(lbl.replace(' kunta', ' mlk'), lang='fi')])
 
-    if len(warsa_matches) == 0:
-        log.info("Couldn't find Warsa URI for municipality {lbl}".format(lbl=labels))
-    elif len(warsa_matches) == 1:
+    if len(warsa_matches) == 1:
         match = warsa_matches[0]
         log.info('Found {lbl} municipality Warsa URI {s}'.format(lbl=labels, s=match))
+        return match
+
+    elif len(warsa_matches) == 0:
+        log.info("Couldn't find Warsa URI for municipality {lbl}".format(lbl=labels))
     else:
         log.warning('Found multiple Warsa URIs for municipality {lbl}: {s}'.format(lbl=labels, s=warsa_matches))
-        warsa_matches = []
 
-    return warsa_matches
+    return None
 
 
