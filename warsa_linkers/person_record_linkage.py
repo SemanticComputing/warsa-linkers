@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from dedupe import RecordLink, trainingDataLink
 from rdflib import Graph, URIRef, Namespace
 
-from .utils import query_sparql
+from warsa_linkers.utils import query_sparql
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ HAVING(MAX(COALESCE(?rank_lvl, 1)) >= MAX(COALESCE(?rank_level2, 1)))
 '''
 
 
-def link_persons(graph, endpoint, doc_data, data_fields):
+def link_persons(graph, endpoint, doc_data, data_fields, links_json_file):
     """
     Link document records of persons to WarSampo person instances.
 
@@ -75,7 +75,7 @@ def link_persons(graph, endpoint, doc_data, data_fields):
     per_data = _generate_persons_dict(endpoint)
     log.info('Got {} WarSampo persons'.format(len(per_data)))
 
-    doc_data, num_links = get_person_links(doc_data, per_data)
+    doc_data, num_links = get_person_links(doc_data, per_data, links_json_file)
 
     log.info('Got {} person links as training data'.format(num_links))
 
@@ -161,12 +161,12 @@ def get_date_value(date_literal):
     """
     if date_literal:
         try:
-            return datetime.strptime(str(date_literal), DATE_FORMAT).isoformat()
+            return datetime.strptime(str(date_literal), DATE_FORMAT).date()
         except ValueError:
             log.warning('Unable to parse date {}'.format(date_literal))
 
 
-def get_person_links(documents: dict, persons: dict, links_json_file='input/person_links.json'):
+def get_person_links(documents: dict, persons: dict, links_json_file):
     """
     Read person links from a JSON file
     """
@@ -198,22 +198,21 @@ def intersection_comparator(field_1, field_2):
 def activity_comparator(cas_death, per_activity):
     """
     Compare death date with activity time from WarSampo events
-    >>> activity_comparator('1944-04-02', '1944-04-02')
+    >>> activity_comparator(datetime(1944, 4, 2), datetime(1944, 4, 2))
     0
-    >>> activity_comparator('1944-04-12', '1944-04-02')
+    >>> activity_comparator(datetime(1944, 4, 12), datetime(1944, 4, 2))
     0
-    >>> activity_comparator('1944-04-12', '1944-05-01')
-    >>> activity_comparator('1941-11-24', '1944-04-02')
+    >>> activity_comparator(datetime(1944, 4, 12), datetime(1944, 5, 1))
+    >>> activity_comparator(datetime(1941, 11, 24), datetime(1944, 4, 2))
     1
-    >>> activity_comparator('1944-04-12', None)
-    >>> activity_comparator('1944-07-12', '1944-05-91')
+    >>> activity_comparator(datetime(1944, 4, 12), None)
+    >>> activity_comparator(None, datetime(1944, 5, 14))
     """
     if cas_death and per_activity:
         if cas_death >= per_activity:
             return 0
         try:
-            if (datetime.strptime(cas_death, DATE_FORMAT) + timedelta(days=30)) < datetime.strptime(per_activity,
-                                                                                                    DATE_FORMAT):
+            if cas_death + timedelta(days=30) < per_activity:
                 return 1
         except ValueError:
             pass

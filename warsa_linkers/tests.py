@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #  -*- coding: UTF-8 -*-
+import datetime
 import pprint
 import unittest
 from unittest import mock
@@ -162,13 +163,12 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'rank_level': None
         },
         'http://ldf.fi/warsa/actors/person_3380': {
-            'activity_end': '1941-01-01T00:00:00',
-            'birth_begin': '1896-10-05T00:00:00',
-            'birth_end': '1896-10-05T00:00:00',
-            'birth_place': [
-                'http://ldf.fi/warsa/places/municipalities/m_place_47'],
-            'death_begin': '1944-11-19T00:00:00',
-            'death_end': '1944-11-19T00:00:00',
+            'activity_end': datetime.date(1941, 1, 1),
+            'birth_begin': datetime.date(1896, 10, 5),
+            'birth_end': datetime.date(1896, 10, 5),
+            'birth_place': ['http://ldf.fi/warsa/places/municipalities/m_place_47'],
+            'death_begin': datetime.date(1944, 11, 19),
+            'death_end': datetime.date(1944, 11, 19),
             'family': 'Lahdenperä',
             'given': 'Niilo '
                      'Johannes',
@@ -177,15 +177,13 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'rank_level': 12
         },
         'http://ldf.fi/warsa/actors/person_4399': {
-            'activity_end': '1940-01-01T00:00:00',
-            'birth_begin': '1896-06-18T00:00:00',
-            'birth_end': '1896-06-18T00:00:00',
-            'birth_place': [
-                'http://ldf.fi/warsa/places/municipalities/m_place_223'],
-            'death_begin': '1962-05-04T00:00:00',
-            'death_end': '1962-05-04T00:00:00',
-            'family': 'Herka '
-                      'Hägglund',
+            'activity_end': datetime.date(1940, 1, 1),
+            'birth_begin': datetime.date(1896, 6, 18),
+            'birth_end': datetime.date(1896, 6, 18),
+            'birth_place': ['http://ldf.fi/warsa/places/municipalities/m_place_223'],
+            'death_begin': datetime.date(1962, 5, 4),
+            'death_end': datetime.date(1962, 5, 4),
+            'family': 'Herka Hägglund',
             'given': 'Armas Pekka',
             'person': 'http://ldf.fi/warsa/actors/person_4399',
             'rank': 'http://ldf.fi/warsa/actors/ranks/Eversti',
@@ -211,7 +209,7 @@ class PersonRecordLinkageTest(unittest.TestCase):
                         side_effect=lambda x: self.WARSA_PERSONS_SPARQL_RESULTS):
             results = _generate_persons_dict('http://sparql')
 
-            self.assertEqual(results, self.EXPECTED_RESULTS)
+            self.assertEqual(results, self.EXPECTED_RESULTS, pprint.pformat(results))
 
 
 if __name__ == '__main__':

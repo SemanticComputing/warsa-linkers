@@ -53,21 +53,21 @@ class Validator:
 def preprocessor(text, *args):
     """
     >>> preprocessor('Ulko-Tammio')
-    'Ulko-Tammio'
+    'paikka Ulko-Tammio'
     >>> preprocessor('Yli-Tapiola')
-    'Yli-Tapiola'
+    'paikka Yli-Tapiola'
     >>> preprocessor('Helsinki-Vantaa')
-    'Helsinki Vantaa'
+    'paikka Helsinki Vantaa'
     >>> preprocessor('Oinola')
-    'Oinaala'
+    'paikka Oinaala'
     >>> preprocessor('Helsinki,Oulu')
-    'Helsinki, Oulu'
+    'paikka Helsinki, Oulu'
     >>> preprocessor('Some text Helsinki')
-    'Some text Helsinki'
+    'paikka Some text Helsinki'
     >>> preprocessor('Sommeesta')
-    'Sommee'
+    'paikka Sommee'
     >>> preprocessor('Pidettiin Bio Rexissä')
-    'Pidettiin Helsinki'
+    'paikka Pidettiin Helsinki'
     """
 
     text = text.replace('Yli-Tornio', 'Ylitornio')
