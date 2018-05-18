@@ -62,13 +62,17 @@ HAVING(MAX(COALESCE(?rank_lvl, 1)) >= MAX(COALESCE(?rank_level2, 1)))
 '''
 
 
-def link_persons(graph, endpoint, doc_data, data_fields, links_json_file):
+def link_persons(graph, endpoint, doc_data, data_fields, links_json_file, sample_size=200000, threshold_ratio=0.5):
     """
     Link document records of persons to WarSampo person instances.
 
     :param graph: Data in RDFLib Graph object
     :param endpoint: Endpoint to query persons from
-    :param doc_data:
+    :param doc_data: Dataset of person documents
+    :param data_fields: Data field specifications for linking
+    :param links_json_file: Known person links file
+    :param sample_size: Sample size for training
+    :param threshold_ratio: Desired recall / precision importance ratio
     :return: RDFLib Graph with updated links
     """
     log.info('Got {} document records'.format(len(doc_data)))
@@ -83,21 +87,21 @@ def link_persons(graph, endpoint, doc_data, data_fields, links_json_file):
     link_graph = Graph()
     if num_links:
         linker = RecordLink(data_fields)
-        linker.sample(doc_data, per_data, sample_size=len(doc_data) * 2)
+        linker.sample(doc_data, per_data, sample_size=sample_size)
         linker.markPairs(trainingDataLink(doc_data, per_data, common_key='person'))
         linker.train()
 
         with open('output/training_data.json', 'w') as fp:
             linker.writeTraining(fp)
 
-        threshold = linker.threshold(doc_data, per_data, 0.5)  # Set desired recall / precision importance ratio
+        threshold = linker.threshold(doc_data, per_data, threshold_ratio)
         links = linker.match(doc_data, per_data, threshold=threshold)
         log.info('Found {} person links'.format(len(links)))
 
         for link in links:
             cas = link[0][0]
             per = link[0][1]
-            log.debug('Found person link: {}  <-->  {} (confidence: {})'.format(cas, per, link[1]))
+            log.info('Found person link: {}  <-->  {} (confidence: {})'.format(cas, per, link[1]))
             link_graph.add((URIRef(cas), CRM.P70_documents, URIRef(per)))
 
         log.info('Got weights: {}'.format(linker.classifier.weights))
