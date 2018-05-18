@@ -51,8 +51,7 @@ class OccupationTest(unittest.TestCase):
         for p in [p1, p2, p3]:
             graph.add((p, RDF.type, ptype))
 
-        with mock.patch('warsa_linkers.occupations.query_sparql',
-                        side_effect=lambda x: self.OCCUPATION_LINK_SPARQL_RESULTS):
+        with mock.patch('requests.post', side_effect=lambda x, y: PostMock(self.OCCUPATION_LINK_SPARQL_RESULTS)):
             results = link_occupations(graph, '', source_prop, target_prop, ptype)
 
         self.assertEqual(3, len(results))
@@ -219,11 +218,19 @@ class PersonRecordLinkageTest(unittest.TestCase):
     }
 
     def test_generate_persons_dict(self):
-        with mock.patch('warsa_linkers.person_record_linkage.query_sparql',
-                        side_effect=lambda x: self.WARSA_PERSONS_SPARQL_RESULTS):
+        with mock.patch('requests.post', side_effect=lambda x, y: PostMock(self.WARSA_PERSONS_SPARQL_RESULTS)):
             results = _generate_persons_dict('http://sparql')
 
             self.assertEqual(results, self.EXPECTED_RESULTS, pprint.pformat(results))
+
+
+class PostMock:
+
+    def __init__(self, results):
+        self.results = results
+
+    def json(self):
+        return self.results
 
 
 if __name__ == '__main__':

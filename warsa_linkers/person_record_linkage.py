@@ -4,15 +4,13 @@
 import logging
 import re
 import json
+import requests
 
-from SPARQLWrapper import SPARQLWrapper, JSON
 from collections import defaultdict
 
 from datetime import datetime, timedelta
 from dedupe import RecordLink, trainingDataLink
 from rdflib import Graph, URIRef, Namespace
-
-from warsa_linkers.utils import query_sparql
 
 log = logging.getLogger(__name__)
 
@@ -122,11 +120,7 @@ def _generate_persons_dict(endpoint):
     Generate a persons dict from person instances
     """
 
-    sparql = SPARQLWrapper(endpoint)
-    sparql.method = 'POST'
-    sparql.setQuery(QUERY_WARSA_PERSONS)
-    sparql.setReturnFormat(JSON)
-    results = query_sparql(sparql)
+    results = requests.post(endpoint, {'query': QUERY_WARSA_PERSONS}).json()
 
     persons = defaultdict(dict)
     for person_row in results['results']['bindings']:

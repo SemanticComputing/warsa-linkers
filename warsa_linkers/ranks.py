@@ -2,11 +2,9 @@
 #  -*- coding: UTF-8 -*-
 """Link rank strings to WarSampo rank ontology"""
 import re
+import requests
 
-from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph, RDF, URIRef
-
-from .utils import query_sparql
 
 
 def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
@@ -103,11 +101,8 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
 
     rank_literals = set(map(preprocess, graph.objects(None, source_prop)))
 
-    sparql = SPARQLWrapper(endpoint)
-    sparql.method = 'POST'
-    sparql.setQuery(query.format(ranks='" "'.join(rank_literals)))
-    sparql.setReturnFormat(JSON)
-    results = query_sparql(sparql)
+    results = requests.post(endpoint, {'query': query.format(values='" "'.join(rank_literals))}).json()
+
 
     rank_links = Graph()
     ranks = {}

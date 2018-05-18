@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="warsa_linkers",
-    version="0.5.0",
+    version="0.5.1",
     author="Erkki Heino, Mikko Koho",
     description="WarSampo entity linking",
     license="MIT",
@@ -20,7 +20,6 @@ setup(
         'rdflib >= 4.2.0',
         'requests >= 2.7.0',
         'roman',
-        'SPARQLWrapper',
         'dedupe',
     ],
 )

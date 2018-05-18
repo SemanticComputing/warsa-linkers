@@ -6,11 +6,10 @@ import logging
 import re
 
 import sys
-from SPARQLWrapper import SPARQLWrapper, JSON
+
+import requests
 from rdflib import Graph, URIRef, RDF
 from rdflib.util import guess_format
-
-from warsa_linkers.utils import query_sparql
 
 log = logging.getLogger(__name__)
 
@@ -57,11 +56,7 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
     literals = set(map(preprocess, graph.objects(None, source_property)))
 
     log.info('Got {n} occupations for linking'.format(n=len(literals)))
-    sparql = SPARQLWrapper(endpoint)
-    sparql.method = 'POST'
-    sparql.setQuery(query.format(values='" "'.join(literals)))
-    sparql.setReturnFormat(JSON)
-    results = query_sparql(sparql)
+    results = requests.post(endpoint, {'query': query.format(values='" "'.join(literals))}).json()
 
     links = Graph()
     uris = {}
