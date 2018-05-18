@@ -96,7 +96,8 @@ class PersonRecordLinkageTest(unittest.TestCase):
                     "rank_level": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#integer",
                                    "value": "15"},
                     "activity_end": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#date",
-                                     "value": "1940-01-01"}
+                                     "value": "1940-01-01"},
+                    "units": {"type": "uri", "value": "http://ldf.fi/warsa/actors/actor_3179"},
                 },
                 {
                     "person": {"type": "uri", "value": "http://ldf.fi/warsa/actors/person_3380"},
@@ -116,7 +117,8 @@ class PersonRecordLinkageTest(unittest.TestCase):
                     "rank_level": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#integer",
                                    "value": "12"},
                     "activity_end": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#date",
-                                     "value": "1941-01-01"}
+                                     "value": "1941-01-01"},
+                    "occupation": {"type": "uri", "value": "http://ldf.fi/warsa/occupations/sekatyomies"},
                 },
                 {
                     "person": {"type": "uri", "value": "http://ldf.fi/warsa/actors/person_1270"},
@@ -145,9 +147,11 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'death_end': None,
             'family': 'Holmberg',
             'given': 'Lennart',
+            'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_1270',
             'rank': 'http://ldf.fi/warsa/actors/ranks/Alikersantti',
-            'rank_level': 3
+            'rank_level': 3,
+            'unit': None
         },
         'http://ldf.fi/warsa/actors/person_1407': {
             'activity_end': None,
@@ -158,9 +162,11 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'death_end': None,
             'family': 'Lamppu',
             'given': 'Aili Irja',
+            'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_1407',
             'rank': None,
-            'rank_level': None
+            'rank_level': None,
+            'unit': None
         },
         'http://ldf.fi/warsa/actors/person_3380': {
             'activity_end': '1941-01-01',
@@ -173,9 +179,11 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'family': 'Lahdenperä',
             'given': 'Niilo '
                      'Johannes',
+            'occupation': 'http://ldf.fi/warsa/occupations/sekatyomies',
             'person': 'http://ldf.fi/warsa/actors/person_3380',
             'rank': 'http://ldf.fi/warsa/actors/ranks/Kapteeni',
-            'rank_level': 12
+            'rank_level': 12,
+            'unit': None
         },
         'http://ldf.fi/warsa/actors/person_4399': {
             'activity_end': '1940-01-01',
@@ -187,9 +195,11 @@ class PersonRecordLinkageTest(unittest.TestCase):
 
             'family': 'Herka Hägglund',
             'given': 'Armas Pekka',
+            'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_4399',
             'rank': 'http://ldf.fi/warsa/actors/ranks/Eversti',
-            'rank_level': 15
+            'rank_level': 15,
+            'unit': ['http://ldf.fi/warsa/actors/actor_3179']
         },
         'http://ldf.fi/warsa/actors/person_5513': {
             'activity_end': None,
@@ -200,9 +210,11 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'death_end': None,
             'family': 'Nurmi',
             'given': 'J.',
+            'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_5513',
             'rank': 'http://ldf.fi/warsa/actors/ranks/Vaenrikki',
-            'rank_level': 9
+            'rank_level': 9,
+            'unit': None
         }
     }
 

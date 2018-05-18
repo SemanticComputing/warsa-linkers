@@ -27,7 +27,10 @@ PREFIX wsa: <http://ldf.fi/schema/warsa/actors/>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
 PREFIX text: <http://jena.apache.org/text#>
-SELECT ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place ?rank (SAMPLE(?rank_lvl) AS ?rank_level) (MAX(?event_begin) as ?activity_end)
+PREFIX biocrm: <http://ldf.fi/schema/bioc/>
+SELECT ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place ?rank
+    (SAMPLE(?rank_lvl) AS ?rank_level) (MAX(?event_begin) as ?activity_end)
+    (GROUP_CONCAT(DISTINCT ?unit; separator='|') as ?units) ?occupation
 WHERE {
       ?person a wsch:Person .
       ?person foaf:firstName ?given .
@@ -56,17 +59,19 @@ WHERE {
     ?person ^crm:P11_had_participant/wsa:hasRank/wsa:level ?rank_level2 .
   }
   OPTIONAL { ?person ^crm:P11_had_participant/crm:P4_has_time-span/crm:P82a_begin_of_the_begin ?event_begin }
+  OPTIONAL { ?person ^crm:P143_joined/crm:P144_joined_with ?unit }
+  OPTIONAL { ?person biocrm:occupation ?occupation }
 }
-GROUP BY ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place ?rank
+GROUP BY ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place
+    ?rank ?occupation
 HAVING(MAX(COALESCE(?rank_lvl, 1)) >= MAX(COALESCE(?rank_level2, 1)))
 '''
 
 
-def link_persons(graph, endpoint, doc_data, data_fields, links_json_file, sample_size=200000, threshold_ratio=0.5):
+def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=200000, threshold_ratio=0.5):
     """
     Link document records of persons to WarSampo person instances.
 
-    :param graph: Data in RDFLib Graph object
     :param endpoint: Endpoint to query persons from
     :param doc_data: Dataset of person documents
     :param data_fields: Data field specifications for linking
@@ -99,10 +104,13 @@ def link_persons(graph, endpoint, doc_data, data_fields, links_json_file, sample
         log.info('Found {} person links'.format(len(links)))
 
         for link in links:
-            cas = link[0][0]
+            doc = link[0][0]
             per = link[0][1]
-            log.info('Found person link: {}  <-->  {} (confidence: {})'.format(cas, per, link[1]))
-            link_graph.add((URIRef(cas), CRM.P70_documents, URIRef(per)))
+            link_graph.add((URIRef(doc), CRM.P70_documents, URIRef(per)))
+
+            log.info('Found person link: {}  <-->  {} (confidence: {})'.format(doc, per, link[1]))
+            log.debug('Linked document: {}'.format(doc_data[doc]))
+            log.debug('Linked Warsa person: {}'.format(per_data[per]))
 
         log.info('Got weights: {}'.format(linker.classifier.weights))
 
@@ -133,6 +141,8 @@ def _generate_persons_dict(endpoint):
         death_begin = person_row.get('death_begin', {}).get('value')
         death_end = person_row.get('death_end', {}).get('value')
         activity_end = person_row.get('activity_end', {}).get('value')
+        units = person_row.get('units', {}).get('value')
+        occupation = person_row.get('occupation', {}).get('value')
 
         person_dict = {
             'person': person,
@@ -146,6 +156,8 @@ def _generate_persons_dict(endpoint):
             'death_begin': get_date_value(death_begin),
             'death_end': get_date_value(death_end),
             'activity_end': get_date_value(activity_end),
+            'unit': units.split('|') if units else None,
+            'occupation': occupation
         }
         persons[person] = person_dict
 
