@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 #  -*- coding: UTF-8 -*-
 """Link person records to WarSampo persons"""
+import os
+
 import logging
 import re
 import json
 import requests
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from datetime import datetime, timedelta
-from dedupe import RecordLink, trainingDataLink
+from dedupe import RecordLink, trainingDataLink, StaticRecordLink
 from rdflib import Graph, URIRef, Namespace
 
 log = logging.getLogger(__name__)
@@ -66,7 +68,46 @@ HAVING(MAX(COALESCE(?rank_lvl, 1)) >= MAX(COALESCE(?rank_level2, 1)))
 '''
 
 
-def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=200000, threshold_ratio=0.5):
+def init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size):
+    if training_settings_file:
+        try:
+            with open(training_settings_file, 'rb') as f:
+                linker = StaticRecordLink(f)
+                log.info('Read settings from {}'.format(training_settings_file))
+                return linker
+        except FileNotFoundError:
+            pass
+
+    linker = RecordLink(data_fields)
+
+    if training_data_file:
+        try:
+            with open(training_data_file) as f:
+                linker.readTraining(f)
+                log.info('Read training data from {}'.format(training_data_file))
+        except FileNotFoundError:
+            pass
+
+    log.info('Generating training data')
+    linker.sample(doc_data, per_data, sample_size=sample_size)
+    linker.markPairs(trainingDataLink(doc_data, per_data, common_key='person'))
+    linker.train()
+
+    if training_data_file:
+        log.info('Writing training data to {}'.format(training_data_file))
+        with open(training_data_file, 'w+') as fp:
+            linker.writeTraining(fp)
+
+    if training_settings_file:
+        log.info('Writing settings data to {}'.format(training_settings_file))
+        with open(training_settings_file, 'wb+') as fp:
+            linker.writeSettings(fp)
+
+    return linker
+
+
+def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=200000, threshold_ratio=0.5,
+                 training_data_file=None, training_settings_file=None):
     """
     Link document records of persons to WarSampo person instances.
 
@@ -76,6 +117,8 @@ def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=2
     :param links_json_file: Known person links file
     :param sample_size: Sample size for training
     :param threshold_ratio: Desired recall / precision importance ratio
+    :param training_data_file:
+    :param training_settings_file:
     :return: RDFLib Graph with updated links
     """
     log.info('Got {} document records'.format(len(doc_data)))
@@ -89,17 +132,10 @@ def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=2
 
     link_graph = Graph()
     if num_links:
-        linker = RecordLink(data_fields)
-        linker.sample(doc_data, per_data, sample_size=sample_size)
-        linker.markPairs(trainingDataLink(doc_data, per_data, common_key='person'))
-        linker.train()
-
-        with open('output/training_data.json', 'w') as fp:
-            linker.writeTraining(fp)
+        linker = init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size)
 
         threshold = linker.threshold(doc_data, per_data, threshold_ratio)
         links = linker.match(doc_data, per_data, threshold=threshold)
-        log.info('Found {} person links'.format(len(links)))
 
         for link in links:
             doc = link[0][0]
@@ -107,10 +143,11 @@ def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=2
             link_graph.add((URIRef(doc), CRM.P70_documents, URIRef(per)))
 
             log.info('Found person link: {}  <-->  {} (confidence: {})'.format(doc, per, link[1]))
-            log.debug('Linked document: {}'.format(doc_data[doc]))
-            log.debug('Linked Warsa person: {}'.format(per_data[per]))
+            log.debug('\nLinked document: {}\n'.format(dict(doc_data[doc])))
+            log.debug('Linked Warsa person: {}\n'.format(dict(per_data[per])))
 
         log.info('Got weights: {}'.format(linker.classifier.weights))
+        log.info('Found {} person links'.format(len(links)))
 
     return link_graph
 
@@ -155,8 +192,7 @@ def _generate_persons_dict(endpoint):
         }
         persons[person] = person_dict
 
-        if person_dict['rank'] is not None:
-            log.debug('WarSampo person: {}'.format(person_dict))
+    log.debug('WarSampo person: {}'.format(person_dict))
 
     return persons
 
@@ -231,4 +267,3 @@ def activity_comparator(cas_death, per_activity):
             return 0
         if death + timedelta(days=30) < activity:
             return 1  # Was active after death
-
