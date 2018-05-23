@@ -91,7 +91,7 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
     query = """
         PREFIX text: <http://jena.apache.org/text#>
         SELECT ?rank (SAMPLE(?id_) AS ?id) {{
-            VALUES ?rank {{ "{ranks}" }}
+            VALUES ?rank {{ "{values}" }}
             GRAPH <http://ldf.fi/warsa/ranks> {{
                 ?id_ text:query ?rank .
                 ?id_ a <http://ldf.fi/schema/warsa/Rank> .
@@ -102,7 +102,6 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
     rank_literals = set(map(preprocess, graph.objects(None, source_prop)))
 
     results = requests.post(endpoint, {'query': query.format(values='" "'.join(rank_literals))}).json()
-
 
     rank_links = Graph()
     ranks = {}
