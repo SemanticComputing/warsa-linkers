@@ -104,6 +104,39 @@ def init_linker(data_fields, training_data_file, training_settings_file, doc_dat
     return linker
 
 
+def _finalize_links(link_graph: Graph, training_links: list):
+    """
+    Add all training links to the output, as some can occasionally be missing.
+    """
+    for link in training_links:
+        doc = link[0]
+        per = link[1]
+        link_graph.add((URIRef(doc), CRM.P70_documents, URIRef(per)))
+
+    return link_graph
+
+
+def read_person_links(json_file: str):
+    """
+    Read person links to use as training data.
+    :param json_file: JSON file with person-document pairs formatted as a SPARQL JSON result.
+    :return: List of person-document pair tuples
+    """
+    with open(json_file, 'r') as fp:
+        links = json.load(fp)['results']['bindings']
+
+    link_tuples = []
+
+    for link in links:
+        doc = link['doc']['value']
+        per = link['person']['value']
+        link_tuples.append((doc, per))
+
+    log.info('Got {} person links as training data'.format(len(links)))
+
+    return link_tuples
+
+
 def link_persons(endpoint, doc_data, data_fields, training_links, sample_size=200000, threshold_ratio=0.5,
                  training_data_file=None, training_settings_file=None):
     """
@@ -145,7 +178,7 @@ def link_persons(endpoint, doc_data, data_fields, training_links, sample_size=20
     log.info('Got weights: {}'.format(linker.classifier.weights))
     log.info('Found {} person links'.format(len(links)))
 
-    return link_graph
+    return _finalize_links(link_graph, training_links)
 
 
 def _sanitize_family_name(name: str):
