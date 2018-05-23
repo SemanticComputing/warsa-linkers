@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 #  -*- coding: UTF-8 -*-
 """Link person records to WarSampo persons"""
-import os
-
 import logging
 import re
 import json
 import requests
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 
 from datetime import datetime, timedelta
 from dedupe import RecordLink, trainingDataLink, StaticRecordLink
@@ -106,7 +104,7 @@ def init_linker(data_fields, training_data_file, training_settings_file, doc_dat
     return linker
 
 
-def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=200000, threshold_ratio=0.5,
+def link_persons(endpoint, doc_data, data_fields, training_links, sample_size=200000, threshold_ratio=0.5,
                  training_data_file=None, training_settings_file=None):
     """
     Link document records of persons to WarSampo person instances.
@@ -114,9 +112,9 @@ def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=2
     :param endpoint: Endpoint to query persons from
     :param doc_data: Dataset of person documents
     :param data_fields: Data field specifications for linking
-    :param links_json_file: Known person links file
+    :param training_links: Known person links file
     :param sample_size: Sample size for training
-    :param threshold_ratio: Desired recall / precision importance ratio
+    :param threshold_ratio: Desired recall / precision importance (between 0 and 1)
     :param training_data_file:
     :param training_settings_file:
     :return: RDFLib Graph with updated links
@@ -126,30 +124,58 @@ def link_persons(endpoint, doc_data, data_fields, links_json_file, sample_size=2
     per_data = _generate_persons_dict(endpoint)
     log.info('Got {} WarSampo persons'.format(len(per_data)))
 
-    doc_data, num_links = get_person_links(doc_data, per_data, links_json_file)
-
-    log.info('Got {} person links as training data'.format(num_links))
+    doc_data = get_person_links(doc_data, per_data, training_links)
 
     link_graph = Graph()
-    if num_links:
-        linker = init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size)
 
-        threshold = linker.threshold(doc_data, per_data, threshold_ratio)
-        links = linker.match(doc_data, per_data, threshold=threshold)
+    linker = init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size)
 
-        for link in links:
-            doc = link[0][0]
-            per = link[0][1]
-            link_graph.add((URIRef(doc), CRM.P70_documents, URIRef(per)))
+    # threshold_ratio = linker.threshold(doc_data, per_data, threshold_ratio)
+    links = linker.match(doc_data, per_data, threshold=threshold_ratio)
 
-            log.info('Found person link: {}  <-->  {} (confidence: {})'.format(doc, per, link[1]))
-            log.debug('\nLinked document: {}\n'.format(dict(doc_data[doc])))
-            log.debug('Linked Warsa person: {}\n'.format(dict(per_data[per])))
+    for link in links:
+        doc = link[0][0]
+        per = link[0][1]
+        link_graph.add((URIRef(doc), CRM.P70_documents, URIRef(per)))
 
-        log.info('Got weights: {}'.format(linker.classifier.weights))
-        log.info('Found {} person links'.format(len(links)))
+        log.info('Found person link: {}  <-->  {} (confidence: {})'.format(doc, per, link[1]))
+        log.debug('\nLinked document: {}\n'.format(dict(doc_data[doc])))
+        log.debug('Linked Warsa person: {}\n'.format(dict(per_data[per])))
+
+    log.info('Got weights: {}'.format(linker.classifier.weights))
+    log.info('Found {} person links'.format(len(links)))
 
     return link_graph
+
+
+def _sanitize_family_name(name: str):
+    """
+    :param name:
+    :return:
+
+    >>> _sanitize_family_name('Viikla (ent Viklund)')
+    'Viikla Viklund'
+    >>> _sanitize_family_name('Ahlavuo Ent.Ahlqvist')
+    'Ahlavuo Ahlqvist'
+    >>> _sanitize_family_name('Vuorinne Ent. Berg')
+    'Vuorinne Berg'
+    >>> _sanitize_family_name('Vuorinne (Berg)')
+    'Vuorinne Berg'
+    >>> _sanitize_family_name('Lauhikari Ent.Lübeck')
+    'Lauhikari Lübeck'
+    >>> _sanitize_family_name('Simojoki (ent. Simelius)')
+    'Simojoki Simelius'
+    >>> _sanitize_family_name('Simojoki (e. Simelius)')
+    'Simojoki Simelius'
+    >>> _sanitize_family_name('Simojoki e Simelius')
+    'Simojoki Simelius'
+    >>> _sanitize_family_name('Ent')
+    'Ent'
+    >>> _sanitize_family_name('Heino')
+    'Heino'
+    """
+    new = re.sub(r'\s+\(?[eE](?:nt)?[. ]\s*', ' ', name)
+    return re.sub(r'[()]', '', new)
 
 
 def _generate_persons_dict(endpoint):
@@ -178,7 +204,7 @@ def _generate_persons_dict(endpoint):
         person_dict = {
             'person': person,
             'given': given,
-            'family': re.sub(r'\s+E(?:nt)?\.\s*', ' ', family),
+            'family': _sanitize_family_name(family),
             'rank': rank,
             'rank_level': int(rank_level) if rank_level else None,
             'birth_place': [birth_place] if birth_place else None,
@@ -190,7 +216,11 @@ def _generate_persons_dict(endpoint):
             'unit': units.split('|') if units else None,
             'occupation': occupation
         }
-        persons[person] = person_dict
+        if len([val for val in person_dict.values() if val is not None]) > 3:
+            # Filter out persons with very little information
+            persons[person] = person_dict
+        else:
+            log.info('Not using person {} for record linkage because of insufficient information'.format(person))
 
     log.debug('WarSampo person: {}'.format(person_dict))
 
@@ -214,25 +244,19 @@ def get_date_value(date_str, date_format=INPUT_DATE_FORMAT):
             log.warning('Unable to parse date {}'.format(date_str))
 
 
-def get_person_links(documents: dict, persons: dict, links_json_file):
+def get_person_links(documents: dict, persons: dict, links):
     """
-    Read person links from a JSON file
+    Add person links to document dicts
     """
-    with open(links_json_file, 'r') as fp:
-        links = json.load(fp)['results']['bindings']
-
-    num_links = 0
-
     for link in links:
-        doc = link['doc']['value']
-        per = link['person']['value']
+        doc = link[0]
+        per = link[1]
         if doc in documents and per in persons:
             documents[doc].update({'person': per})
-            num_links += 1
         else:
             log.warning('Could not find linked person: {} - {}'.format(doc, per))
 
-    return documents, num_links
+    return documents
 
 
 def intersection_comparator(field_1, field_2):

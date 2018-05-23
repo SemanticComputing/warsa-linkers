@@ -152,21 +152,6 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'rank_level': 3,
             'unit': None
         },
-        'http://ldf.fi/warsa/actors/person_1407': {
-            'activity_end': None,
-            'birth_begin': None,
-            'birth_end': None,
-            'birth_place': None,
-            'death_begin': None,
-            'death_end': None,
-            'family': 'Lamppu',
-            'given': 'Aili Irja',
-            'occupation': None,
-            'person': 'http://ldf.fi/warsa/actors/person_1407',
-            'rank': None,
-            'rank_level': None,
-            'unit': None
-        },
         'http://ldf.fi/warsa/actors/person_3380': {
             'activity_end': '1941-01-01',
             'birth_begin': '1896-10-05',
