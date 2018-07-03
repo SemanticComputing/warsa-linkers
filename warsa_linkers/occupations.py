@@ -3,18 +3,20 @@
 """Link occupation strings to WarSampo occupation ontology"""
 import argparse
 import logging
+import operator
 import re
 
 import sys
 
 import requests
+from collections import defaultdict
 from rdflib import Graph, URIRef, RDF
 from rdflib.util import guess_format
 
 log = logging.getLogger(__name__)
 
 
-def link_occupations(graph, endpoint, source_property: URIRef, target_property: URIRef, resource_type: URIRef):
+def link_occupations(graph, endpoint, source_property: URIRef, target_property: URIRef, resource_type: URIRef, sep='/'):
     """
     Link occupations in graph.
 
@@ -29,13 +31,79 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
     escape_regex = r'[\[\]\\/\&|!(){}^"~*?:+]'
     escape = re.compile(escape_regex)
 
-    def preprocess(literal):
+    valuemap = {
+        'aut.kulj.': 'autonkuljettaja',
+        'maanvilj.tytär': 'maanviljelijän tytär',
+        'mv.': 'maanviljelijä',
+        'mv.p': 'maanviljelijän poika',
+        'mv.p.': 'maanviljelijän poika',
+        'mv.pka': 'maanviljelijän poika',
+        'mv. pka': 'maanviljelijän poika',
+        'myym.hoit.': 'myymälän hoitaja',
+        'kalast.': 'kalastaja',
+        'koulul.': 'koululainen',
+        'taloll.pka': 'talollisen poika',
+        'talollisen pka': 'talollisen poika',
+        'tal.pka': 'talollisen poika',
+        'taloll.': 'talollinen',
+        'tilall.pka': 'tilallisen poika',
+        'tilall. pka': 'tilallisen poika',
+        'teht.työm.': 'tehdastyöläinen',
+        'poliisikonst': 'poliisikonstaapeli',
+        'poliisikonst.': 'poliisikonstaapeli',
+        'rak.työm.': 'rakennustyöläinen',
+        'opisk.': 'opiskelija',
+    }
+
+    subs = {
+        r'(.+)( *)(pka)': r'\1 poika',
+        r'(.+)(m\.)$': r'\1mies',
+        r'(.+)(apul\.)': r'\1apulainen',
+        r'(.+)(hoit\.)': r'\1hoitaja',
+        r'(.+)(joht\.)': r'\1johtaja',
+        r'(.+)(mest\.)': r'\1mestari',
+        r'(.+)(työntek\.)': r'\1työntekijä',
+        r'(.+)(op\.)': r'\1opettaja',
+        r'(.+)(opett\.)': r'\1opettaja',
+
+        r'(.*)(asent\.)': r'\1asentaja',
+        r'(.*)(kulj\.)': r'\1kuljettaja',
+        r'(.*)(kuljett\.)': r'\1kuljettaja',
+        r'(.*)(lämmitt\.)': r'\1lämmittäjä',
+        r'(.*)(teht\.)': r'\1tehtaan ',
+        r'(.*)(tilall\.)': r'\1tilallinen',
+
+        r'^(taloll\. ?)(.+)': r'talollisen \2',
+    }
+
+    def harmonize(literal):
         literal = str(literal).strip()
 
         if literal == '-':
             return ''
 
-        values = '" "'.join([escape.sub(r'\\\\\g<0>', s.strip()) for s in literal.split(sep='/') if s])
+        processed = []
+        for s in literal.split(sep=sep):
+            if not s:
+                continue
+
+            s = s.strip()
+            value = valuemap[s] if s in valuemap else s
+            for sub in subs.items():
+                value = re.sub(sub[0], sub[1], value)
+
+            if s != value:
+                processed.append(value)
+                log.debug('Processed occupation {old} into {new}'.format(old=s, new=value))
+            else:
+                processed.append(s)
+
+        return processed
+
+    def preprocess(literal):
+        literal = str(literal).strip()
+
+        values = '" "'.join([escape.sub(r'\\\\\g<0>', s) for s in harmonize(literal)])
 
         return values
 
@@ -63,12 +131,21 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
     for res in results['results']['bindings']:
         uris[res['value']['value']] = res['id']['value']
 
+    unlinked_occupations = defaultdict(int)
+
     for person in graph[:RDF.type:resource_type]:
         literals = graph.objects(person, source_property)
         for literal in literals:
-            literal = str(literal)
-            if literal in uris:
-                links.add((person, target_property, URIRef(uris[literal])))
+            harmonized = harmonize(literal)
+            log.debug('{} - {}'.format(literal, harmonized))
+            for occupation in harmonized:
+                if occupation in uris:
+                    links.add((person, target_property, URIRef(uris[occupation])))
+                else:
+                    unlinked_occupations[occupation] += 1
+
+    for literal, count in sorted(unlinked_occupations.items(), key=operator.itemgetter(1, 0), reverse=True):
+        log.warning('No URI found for occupation: {o}  ({c})'.format(o=literal, c=count))
 
     return links
 

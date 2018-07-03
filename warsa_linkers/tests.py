@@ -44,7 +44,7 @@ class OccupationTest(unittest.TestCase):
 
         graph = Graph()
         graph.add((p1, source_prop, Literal('silinterimies', lang='fi')))
-        graph.add((p2, source_prop, Literal('työmies')))
+        graph.add((p2, source_prop, Literal('työm.')))
         graph.add((p2, source_prop, Literal('juuston suolaaja')))
         graph.add((p3, source_prop, Literal('kakkaaja')))
 
