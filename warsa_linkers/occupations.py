@@ -137,7 +137,6 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
         literals = graph.objects(person, source_property)
         for literal in literals:
             harmonized = harmonize(literal)
-            log.debug('{} - {}'.format(literal, harmonized))
             for occupation in harmonized:
                 if occupation in uris:
                     links.add((person, target_property, URIRef(uris[occupation])))
