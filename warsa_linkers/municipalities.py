@@ -213,39 +213,22 @@ CURRENT_MUNICIPALITIES = {
     'Alaveteli': 'Kruunupyy',
     'Nedervetil Alaveteli': 'Kruunupyy',
     'Houtskari': 'Parainen',
-    'Houtskär Houtskari': 'Parainen',
     'Jepua': 'Uusikaarlepyy',
-    'Jeppo Jepua': 'Uusikaarlepyy',
     'Kemiö': 'Kemiönsaari',
-    'Kimito Kemiö': 'Kemiönsaari',
     'Maksamaa': 'Vöyri',
-    'Maxmo Maksamaa': 'Vöyri',
     'Nauvo': 'Parainen',
-    'Nagu Nauvo': 'Parainen',
     'Oravainen': 'Vöyri',
-    'Oravais Oravainen': 'Vöyri',
     'Pernaja': 'Loviisa',
-    'Pernå Pernaja': 'Loviisa',
     'Pirttikylä': 'Närpiö',
-    'Pörtom Pirttikylä': 'Närpiö',
     'Raippaluoto': 'Mustasaari',
-    'Replot Raippaluoto': 'Mustasaari',
     'Siipyy': 'Kristiinankaupunki',
-    'Sideby Siipyy': 'Kristiinankaupunki',
     'Tammisaari': 'Raasepori',
-    'Tammisaari Ekenäs': 'Raasepori',
     'Teerijärvi': 'Kruunupyy',
-    'Terjärv Teerijärvi': 'Kruunupyy',
     'Ylimarkku': 'Närpiö',
-    'Övermark Ylimarkku': 'Närpiö',
     'Tiukka': 'Kristiinankaupunki',
-    'Tjöck Tiukka': 'Kristiinankaupunki',
     'Petolahti': 'Maalahti',
-    'Petalax Petolahti': 'Maalahti',
     'Karjaa': 'Raasepori',
-    'Karjaa Karis': 'Raasepori',
     'Karjaan mlk': 'Raasepori',
-    'Karjaan mlk Karis lk': 'Raasepori',
     'Hyvinkään mlk': 'Hyvinkää',
     'Haagan kauppala': 'Helsinki',
     # 'Kuopion mlk': 'Kuopio', # Two new municipalities
@@ -254,7 +237,6 @@ CURRENT_MUNICIPALITIES = {
     'Koski Hl.': 'Hollola',
     'Uusikirkko Tl': 'Uusikaupunki',
     'Tenhola': 'Raasepori',
-    'Tenhola Tenala': 'Raasepori',
 }
 
 MUNICIPALITY_MAPPING = {
@@ -289,11 +271,12 @@ def link_to_pnr(graph, target_prop, source_prop, arpa, *args, preprocess=True, *
 
     def _get_municipality_label(val, uri, *args2):
         """
+        Concatenate municipality labels into one string
+
         :param uri: municipality URI
         """
-        lbl = str(graph.value(uri, URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'))).replace('/', ' ')
-        lbl = CURRENT_MUNICIPALITIES.get(lbl, lbl)
-        return lbl
+        lbls = graph.objects(uri, URIRef('http://www.w3.org/2004/02/skos/core#prefLabel'))
+        return ' '.join(CURRENT_MUNICIPALITIES.get(str(l), str(l)) for l in lbls)
 
     if preprocess:
         preprocessor = _get_municipality_label
