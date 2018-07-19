@@ -46,35 +46,45 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
         'talollisen pka': 'talollisen poika',
         'tal.pka': 'talollisen poika',
         'taloll.': 'talollinen',
+        'teurast.': 'teurastaja',
         'tilall.pka': 'tilallisen poika',
         'tilall. pka': 'tilallisen poika',
         'teht.työm.': 'tehdastyöläinen',
+        'opisk.': 'opiskelija',
         'poliisikonst': 'poliisikonstaapeli',
         'poliisikonst.': 'poliisikonstaapeli',
         'rak.työm.': 'rakennustyöläinen',
-        'opisk.': 'opiskelija',
+        'viilankarkais.': 'viilankarkaisija',
     }
 
-    subs = {
-        r'(.+)( *)(pka)': r'\1 poika',
-        r'(.+)(m\.)$': r'\1mies',
-        r'(.+)(apul\.)': r'\1apulainen',
-        r'(.+)(hoit\.)': r'\1hoitaja',
-        r'(.+)(joht\.)': r'\1johtaja',
-        r'(.+)(mest\.)': r'\1mestari',
-        r'(.+)(työntek\.)': r'\1työntekijä',
-        r'(.+)(op\.)': r'\1opettaja',
-        r'(.+)(opett\.)': r'\1opettaja',
+    subs = [
+        (r'(.+)(\.| +)(pka)', r'\1 poika'),
+        (r'(.+)(m\.)$', r'\1mies'),
+        (r'(.+)(apul\.)', r'\1apulainen'),
+        (r'(.+)(harj\.)$', r'\1harjoittelija'),
+        (r'(.+)(hoit\.)', r'\1hoitaja'),
+        (r'(.+)(joht\.)', r'\1johtaja'),
+        (r'(.+)(mest\.)', r'\1mestari'),
+        (r'(.+)(työntek\.)', r'\1työntekijä'),
+        (r'(.+)(op\.)', r'\1opettaja'),
+        (r'(.+)(opett\.)', r'\1opettaja'),
+        (r'(.+)(ins\.)', r'\1insinööri'),
+        (r'(...+)(s\.)$', r'\1seppä'),
 
-        r'(.*)(asent\.)': r'\1asentaja',
-        r'(.*)(kulj\.)': r'\1kuljettaja',
-        r'(.*)(kuljett\.)': r'\1kuljettaja',
-        r'(.*)(lämmitt\.)': r'\1lämmittäjä',
-        r'(.*)(teht\.)': r'\1tehtaan ',
-        r'(.*)(tilall\.)': r'\1tilallinen',
+        (r'(.*)(asent\.)', r'\1asentaja'),
+        (r'(.*)(kaupp\.)', r'\1kauppias'),
+        (r'(.*)(kulj\.)', r'\1kuljettaja'),
+        (r'(.*)(kuljett\.)', r'\1kuljettaja'),
+        (r'(.*)(lämmitt\.)', r'\1lämmittäjä'),
+        (r'(.*)(teht\. *)', r'\1tehtaan '),
+        (r'(.*)(tilall\.)', r'\1tilallinen'),
+        (r'(.*)(pientil\.) (.+)', r'\1pientilallisen \3'),
+        (r'(.*)(työl\.)', r'\1työläinen'),
+        (r'(.*)(työnj\.)', r'\1työnjohtaja'),
 
-        r'^(taloll\. ?)(.+)': r'talollisen \2',
-    }
+        (r'^(palstatil\. *)(.+)', r'palstatilallisen \2'),
+        (r'^(taloll\. *)(.+)', r'talollisen \2'),
+    ]
 
     def harmonize(literal):
         literal = str(literal).strip()
@@ -88,9 +98,12 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
                 continue
 
             s = s.strip()
-            value = valuemap[s] if s in valuemap else s
-            for sub in subs.items():
-                value = re.sub(sub[0], sub[1], value)
+            if s in valuemap:
+                value = valuemap[s]
+            else:
+                value = s
+                for sub in subs:
+                    value = re.sub(sub[0], sub[1], value)
 
             if s != value:
                 processed.append(value)
