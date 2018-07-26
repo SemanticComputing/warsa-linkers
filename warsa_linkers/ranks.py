@@ -21,7 +21,7 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
 
     def preprocess(literal):
         value = str(literal).strip()
-        return rank_mapping[value] if value in rank_mapping else value
+        return rank_mapping.get(value, value)
 
     rank_mapping = {
         'aliluutn': 'aliluutnantti',
@@ -109,7 +109,7 @@ def link_ranks(graph, endpoint, source_prop, target_prop, class_uri):
         ranks[rank['rank']['value']] = rank['id']['value']
 
     for person in graph[:RDF.type:class_uri]:
-        rank_literal = str(graph.value(person, source_prop))
+        rank_literal = preprocess(str(graph.value(person, source_prop)))
         if rank_literal in ranks:
             rank_links.add((person, target_prop, URIRef(ranks[rank_literal])))
 
