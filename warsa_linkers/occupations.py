@@ -10,81 +10,222 @@ import sys
 
 import requests
 from collections import defaultdict
+
+from jellyfish import jaro_winkler
 from rdflib import Graph, URIRef, RDF
 from rdflib.util import guess_format
 
 log = logging.getLogger(__name__)
 
+occupation_mapping = {
+    'ajom.': 'ajomies',
+    'autoh.': 'autohuoltomies',
+    'aut.kulj.': 'autonkuljettaja',
+    'dipl.ins.': 'diplomi-insinööri',
+    'ekon.': 'ekonomi',
+    'hansikk.leikk.': 'hansikastyöntekijä',
+    'holanterin etum': 'holanterin etumies',
+    'hevosm.': 'hevosmies',
+    'huoltom.': 'huoltomies',
+    'fk': 'filosofian kandidaatti',
+    'fm': 'filosofian maisteri',
+    'ins.': 'insinööri',
+    'junam.': 'junamies',
+    'järj.m.': 'järjestysmies',
+    'its.': 'itsellinen',
+    'kassak:piseppä': 'kassakaappiseppä',
+    'kalast.': 'kalastaja',
+    'kemik.kaup.om.': 'kemikalionomistaja',
+    'kivenhakk.': 'kivenhakkaaja',
+    'konst.': 'konstaapeli',
+    'laitosm.': 'laitosmies',
+    'lohkotil.': 'lohkotilallinen',
+    'lukiol.': 'lukiolainen',
+    'korj.pajantyöm.': 'korjauspajan työntekijä',
+    'koulul.': 'koululainen',
+    'maanvilj.tytär': 'maanviljelijän tytär',
+    'maatal.teknikko': 'maatalousteknikko',
+    'majatalon pit.': 'majatalonpitäjä',
+    'merim.': 'merimies',
+    'mv': 'maanviljelijä',
+    'mv.': 'maanviljelijä',
+    'mv.p': 'maanviljelijän poika',
+    'mv.p.': 'maanviljelijän poika',
+    'mv.pka': 'maanviljelijän poika',
+    'mv. pka': 'maanviljelijän poika',
+    'mv.pienvilj.': 'pienviljelijä',
+    'myym.hoit.': 'myymälän hoitaja',
+    'mökk.pka': 'mökkiläisen poika',
+    'nti.': 'neiti',
+    'opisk.': 'opiskelija',
+    'opett.': 'opettaja',
+    'pientil.': 'pientilallinen',
+    'peräm.': 'perämies',
+    'piir.apulainen': 'piirtäjän apulainen',
+    'piirim.': 'piirimies',
+    'porom.': 'poromies',
+    'porolappal.pka': 'porosaamelaisen poika',
+    'poliisikonst': 'poliisikonstaapeli',
+    'poliisikonst.': 'poliisikonstaapeli',
+    'postelj.': 'posteljooni',
+    'postink.': 'postinkantaja',
+    'prässim.': 'prässimies',
+    'putkim.': 'putkimies',
+    'puutarh.': 'puutarhuri',
+    'rahast.': 'rahastaja',
+    'rakennus-': 'rakennustyöläinen',
+    'rautatiel.': 'rautatieläinen',
+    'suut.': 'suutari',
+    'taloll.pka': 'talollisen poika',
+    'talollisen pka': 'talollisen poika',
+    'tal.om.': 'talonomistaja',
+    'tal.pka': 'talollisen poika',
+    'taloll.': 'talollinen',
+    'teht.virk.': 'tehdasvirkailija',
+    'tekn.ylioppilas.': 'tekniikan ylioppilas',
+    'teurast.': 'teurastaja',
+    'tilall.pka': 'tilallisen poika',
+    'tilall. pka': 'tilallisen poika',
+    'teht.työm.': 'tehdastyöläinen',
+    'tullim.': 'tullimies',
+    'ulosottom.': 'ulosottomies',
+    'valok.': 'valokuvaaja',
+    'varastom.': 'varastomies',
+    'viilankarkais.': 'viilankarkaisija',
+    'vinssim.': 'vinssimies',
+}
 
-def link_occupations(graph, endpoint, source_property: URIRef, target_property: URIRef, resource_type: URIRef, sep='/'):
+occupation_substitutions = [
+    (r'^(agr\. *)(.+)', r'agronomian \2'),
+    (r'^(apt\.)(.+)', r'apteekin\2'),
+    (r'^(apul\.)(.+)', r'apulais\2'),
+    (r'^(bens\.as\.)(.+)', r'bensiiniaseman\2'),
+    (r'^(dipl\.)(.+)', r'diplomi\2'),
+    (r'^(el\.lääk(et)?\. *)(.+)', r'eläinlääketieteen \2'),
+    (r'^(farm\. *)(.+)', r'farmasian \2'),
+    (r'^(fil\. *)(.+)', r'filosofian \2'),
+    (r'^(hall.oik. *)(.+)', r'hallinto-oikeuden \2'),
+    (r'^(ho:n *)(.+)', r'hovioikeuden \2'),
+    (r'^(huv\. *)(.+)', r'huvilan \2'),
+    (r'^(höyryk\. *)(.+)', r'höyrykone \2'),
+    (r'^(kansak\. *)(.+)', r'kansakoulun \2'),
+    (r'^(kirjansit\.)(.+)', r'kirjansitomo\2'),
+    (r'^(kun\.kod\. )(.+)', r'kunnalliskodin \2'),
+    (r'^(lentok\. *)(.+)', r'lentokone \2'),
+    (r'^(l\-autoas\. *)(.+)', r'linja-autoaseman \2'),
+    (r'^((lin)|(linn)\.)(.+)', r'linnoitus\2'),
+    (r'^(maat\.metsät\. *)(.+)', r'maa- ja metsätaloustieteiden \2'),
+    (r'^(maat\.)(.+)', r'maatalous\2'),
+    (r'^(makk\.)(.+)', r'makkara\2'),
+    (r'^(metsät\. *)(.+)', r'metsätieteen \2'),
+    (r'^(metsänh\.)(.+)', r'metsänhoitaja\2'),
+    (r'^(mökkil\.)(.*)', r'mökkiläisen \2'),
+    (r'^(mv\.?)(.+)', r'maanviljelijän\2'),
+    (r'^((palstatil)|(palst)\. *)(.+)', r'palstatilallisen \2'),
+    (r'^(pap\.)(.+)', r'paperi\2'),
+    (r'^(pienv\. *)(.+)', r'pienviljelijän \2'),
+    (r'^(piir\. *)(.+)', r'piirtäjän \2'),
+    (r'^((posl)|(porsl)\.)(.+)', r'posliini\2'),
+    (r'^(pol\.)(.+)', r'poliisi\2'),
+    (r'^(puutarh\. *)(.+)', r'puutarha\2'),
+    (r'^(puh\. *)(.+)', r'puhelin\2'),
+    (r'^(rak\. *)(.+)', r'rakennus\2'),
+    (r'^(ratav\. *)(.+)', r'ratavartijan \2'),
+    (r'^(rullausk\. *)(.+)', r'rullauskoneen \2'),
+    (r'^(sair\.)(.+)', r'sairaan\2'),
+    (r'^(sellul\.)(.+)', r'selluloosa\2'),
+    (r'^(sk(\.|\-|:) *)(.+)', r'suojeluskunta\2'),
+    (r'^(sot\. *)(.+)', r'sotilas\2'),
+    (r'^(sotap\.)(.+)', r'sotapoliisi\2'),
+    (r'^(taloll\. *)(.+)', r'talollisen \2'),
+    (r'^(tekn\. *)(.+)', r'tekniikan \2'),
+    (r'^(teol\. *)(.+)', r'teologian \2'),
+    (r'^(teoll\.)(.+)', r'teollisuus\2'),
+    (r'^(til\. *)(.+)', r'tilallisen \2'),
+    (r'^(urh\.)(.+)', r'urheilu\2'),
+    (r'^(vet\. *)(.+)', r'veturin\2'),
+    (r'^(vak\.)(.+)', r'vakuutus\2'),
+    (r'^(var\. *)(.+)', r'varaston \2'),
+    (r'^(vt\. *)(.+)', r'virkaa tekevä \2'),
+    (r'^(ylim\. *)(.+)', r'ylimääräinen  \2'),
+
+    (r'(.*)(harj|harjoitt)($|\.)', r'\1harjoittelija'),
+    (r'(.*)(insin\. ?)(.*)', r'\1insinööri\3'),
+    (r'(.*)(oik\.)', r'\1oikeus'),
+    (r'(.*)(pka)($|\.)', r'\1poika'),
+    (r'(.*)(tekn\.)(.*)', r'\1teknikko\3'),
+    (r'(.*)(työnj)($|\.)', r'\1työnjohtaja'),
+    (r'(.*)(yo)($|\.)', r'\1ylioppilas'),
+    (r'(.*)(työm)($|\.)', r'\1työmies'),
+
+    (r'(.+)(ausk\.)', r'\1auskultantti'),
+    (r'(.+)(apul\.)', r'\1apulainen'),
+    (r'(.+)(hoit\.)', r'\1hoitaja'),
+    (r'(.+)(ins\.)$', r'\1insinööri'),
+    (r'(.+)(isänn\.)$', r'\1isännöitsijä'),
+    (r'(.+)(joht\.)', r'\1johtaja'),
+    (r'(.+)(kand\.)', r'\1kandidaatti'),
+    (r'(.+)(kok\.)', r'\1kokelas'),
+    (r'(.+)(kaup\.)', r'\1kauppias'),
+    (r'(.+)(kapt\.)', r'\1kapteeni'),
+    (r'(.+)(käytt\.)', r'\1käyttäjä'),
+    (r'(.+)(lääk\.)$', r'\1lääkäri'),
+    (r'(.+)(lis\.)$', r'\1lisensiaatti'),
+    (r'(.+)(maist\.?)$', r'\1maisteri'),
+    (r'(.+)(mekaan\.)', r'\1mekaanikko'),
+    (r'(.+)(maal\.)', r'\1maalari'),
+    (r'(.+)(mek\.)', r'\1mekaanikko'),
+    (r'(.+)(mest\.)', r'\1mestari'),
+    (r'(.+)(montt\.)', r'\1monttööri'),
+    (r'(.+)(myym\.)', r'\1myymälä'),
+    (r'(.+)(rakent\.)', r'\1rakentaja'),
+    (r'(.+)(työntek\.)', r'\1työntekijä'),
+    (r'(.+)(työnt\.)', r'\1työntekijä'),
+    (r'(.+)(palv\.)', r'\1palvelija'),
+    (r'(.+)(pääll|pääl)($|\.)', r'\1päällikkö'),
+    (r'(.+)(peräm\.)', r'\1perämies'),
+    (r'(.+)(\.| )(p|(pka))($|\.)', r'\1 poika'),
+    (r'(.+)(opisk)($|\.)', r'\1opiskelija'),
+    (r'(.+)(opistol\.)', r'\1opistolainen'),
+    (r'(.+)(opp\.)', r'\1oppilas'),
+    (r'(.+)((opett|opet)\.)', r'\1opettaja'),
+    (r'(.+)(vart\.)', r'\1vartija'),
+    (r'(.+)(virk\.)', r'\1virkailija'),
+    (r'(.+)(reht\.)$', r'\1rehtori'),
+    (r'(.+)(til\.)', r'\1tilallinen'),
+    (r'(.+)(toim\.)', r'\1toimittaja'),
+    (r'(.+)(ups\.)', r'\1upseeri'),
+]
+
+
+def link_occupations(graph, endpoint, source_property: URIRef, target_property: URIRef, resource_type: URIRef,
+                     sep=r'[,/]', score_threshold=0.8, subs=occupation_substitutions, valuemap=occupation_mapping):
     """
-    Link occupations in graph.
+    Link occupations in graph based on string similarity. Each property value is compared against all values in
+    the occupation ontology.
 
     :param graph: Data in RDFLib Graph object
     :param endpoint: SPARQL endpoint
     :param source_property: Source property for linking
     :param target_property: Property to use for writing found links
     :param resource_type: Class of resources to be linked
+    :param sep: separator(s) as regular expression
+    :param score_threshold: score threshold for linking occupations based on string similarity
+    :param subs: Regular expression substitutions for value harmonization as a list of tuples
+    :param valuemap: dictionary for direct mapping of values
     :return: RDFLib Graph with updated links
     """
 
-    escape_regex = r'[\[\]\\/\&|!(){}^"~*?:+]'
-    escape = re.compile(escape_regex)
-
-    valuemap = {
-        'aut.kulj.': 'autonkuljettaja',
-        'maanvilj.tytär': 'maanviljelijän tytär',
-        'mv.': 'maanviljelijä',
-        'mv.p': 'maanviljelijän poika',
-        'mv.p.': 'maanviljelijän poika',
-        'mv.pka': 'maanviljelijän poika',
-        'mv. pka': 'maanviljelijän poika',
-        'myym.hoit.': 'myymälän hoitaja',
-        'kalast.': 'kalastaja',
-        'koulul.': 'koululainen',
-        'taloll.pka': 'talollisen poika',
-        'talollisen pka': 'talollisen poika',
-        'tal.pka': 'talollisen poika',
-        'taloll.': 'talollinen',
-        'teurast.': 'teurastaja',
-        'tilall.pka': 'tilallisen poika',
-        'tilall. pka': 'tilallisen poika',
-        'teht.työm.': 'tehdastyöläinen',
-        'opisk.': 'opiskelija',
-        'poliisikonst': 'poliisikonstaapeli',
-        'poliisikonst.': 'poliisikonstaapeli',
-        'rak.työm.': 'rakennustyöläinen',
-        'viilankarkais.': 'viilankarkaisija',
-    }
-
-    subs = [
-        (r'(.+)(\.| +)(pka)', r'\1 poika'),
-        (r'(.+)(m\.)$', r'\1mies'),
-        (r'(.+)(apul\.)', r'\1apulainen'),
-        (r'(.+)(harj\.)$', r'\1harjoittelija'),
-        (r'(.+)(hoit\.)', r'\1hoitaja'),
-        (r'(.+)(joht\.)', r'\1johtaja'),
-        (r'(.+)(mest\.)', r'\1mestari'),
-        (r'(.+)(työntek\.)', r'\1työntekijä'),
-        (r'(.+)(op\.)', r'\1opettaja'),
-        (r'(.+)(opett\.)', r'\1opettaja'),
-        (r'(.+)(ins\.)', r'\1insinööri'),
-        (r'(...+)(s\.)$', r'\1seppä'),
-
-        (r'(.*)(asent\.)', r'\1asentaja'),
-        (r'(.*)(kaupp\.)', r'\1kauppias'),
-        (r'(.*)(kulj\.)', r'\1kuljettaja'),
-        (r'(.*)(kuljett\.)', r'\1kuljettaja'),
-        (r'(.*)(lämmitt\.)', r'\1lämmittäjä'),
-        (r'(.*)(teht\. *)', r'\1tehtaan '),
-        (r'(.*)(tilall\.)', r'\1tilallinen'),
-        (r'(.*)(pientil\.) (.+)', r'\1pientilallisen \3'),
-        (r'(.*)(työl\.)', r'\1työläinen'),
-        (r'(.*)(työnj\.)', r'\1työnjohtaja'),
-
-        (r'^(palstatil\. *)(.+)', r'palstatilallisen \2'),
-        (r'^(taloll\. *)(.+)', r'talollisen \2'),
-    ]
+    query = """
+        PREFIX text: <http://jena.apache.org/text#>
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        SELECT ?id ?label {{
+            GRAPH <http://ldf.fi/warsa/occupations> {{
+                ?id a <http://ldf.fi/schema/bioc/Occupation> .
+                ?id skos:prefLabel|skos:altLabel ?label .
+            }}
+         }}
+    """
 
     def harmonize(literal):
         literal = str(literal).strip()
@@ -93,7 +234,7 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
             return ''
 
         processed = []
-        for s in literal.split(sep=sep):
+        for s in re.split(sep, literal):
             if not s:
                 continue
 
@@ -105,44 +246,48 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
                 for sub in subs:
                     value = re.sub(sub[0], sub[1], value)
 
-            if s != value:
+            if value:
                 processed.append(value)
-                log.debug('Processed occupation {old} into {new}'.format(old=s, new=value))
-            else:
-                processed.append(s)
 
         return processed
 
-    def preprocess(literal):
-        literal = str(literal).strip()
+    def find_best_match(occupation_do, occupation_literal):
+        best_score = 0
+        best_uri = None
 
-        values = '" "'.join([escape.sub(r'\\\\\g<0>', s) for s in harmonize(literal)])
+        for uri, label in occupation_do:
+            match_score = jaro_winkler(label, occupation_literal)
+            if match_score > best_score:
+                best_uri = uri
+                best_score = match_score
 
-        return values
+        return best_uri, best_score
 
-    query = """
-        PREFIX text: <http://jena.apache.org/text#>
-        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-        SELECT ?value ?id {{
-            GRAPH <http://ldf.fi/warsa/occupations> {{
-                VALUES ?value {{ "{values}" }} .
-                ?id text:query ?value .
-                ?id a <http://ldf.fi/schema/bioc/Occupation> .
-                ?id skos:prefLabel|skos:altLabel ?label .
-                FILTER(LCASE(?value) = LCASE(str(?label)))
-            }}
-         }}
-    """
+    def get_occupation_link(occupation_do, linked_occupations, occupation_str, original):
+        if occupation_str in linked_occupations:
+            uri = linked_values[occupation_str]
+        else:
+            uri, score = find_best_match(occupation_do, occupation_str)
+            if uri and occupation_str not in linked_occupations:
+                if score > score_threshold:
+                    linked_occupations[occupation_str] = uri
+                    log.debug('Accepted match for occupation {o} ({orig}): {uri} (score {s:.2f})'.format(
+                        o=occupation_str, orig=original, uri=uri, s=score))
+                else:
+                    linked_occupations[occupation_str] = None
+                    log.debug('No match found for occupation {o} ({orig}) (best match {uri} - score {s:.2f})'.format(
+                        o=occupation_str, orig=original, uri=uri, s=score))
+                    uri = None
 
-    literals = set(map(preprocess, graph.objects(None, source_property)))
+        return uri
 
-    log.info('Got {n} occupations for linking'.format(n=len(literals)))
-    results = requests.post(endpoint, {'query': query.format(values='" "'.join(literals))}).json()
+    results = requests.post(endpoint, {'query': query}).json()
 
     links = Graph()
-    uris = {}
-    for res in results['results']['bindings']:
-        uris[res['value']['value']] = res['id']['value']
+    linked_values = {}
+
+    occupation_do_tuples = [(res['id']['value'], res['label']['value']) for res in results['results']['bindings']]
+    log.debug('Got {} occupations'.format(len(occupation_do_tuples)))
 
     unlinked_occupations = defaultdict(int)
 
@@ -151,12 +296,13 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
         for literal in literals:
             harmonized = harmonize(literal)
             for occupation in harmonized:
-                if occupation in uris:
-                    links.add((person, target_property, URIRef(uris[occupation])))
+                occupation_uri = get_occupation_link(occupation_do_tuples, linked_values, occupation, literal)
+                if occupation_uri:
+                    links.add((person, target_property, URIRef(occupation_uri)))
                 else:
                     unlinked_occupations[occupation] += 1
 
-    for literal, count in sorted(unlinked_occupations.items(), key=operator.itemgetter(1, 0), reverse=True):
+    for literal, count in sorted(unlinked_occupations.items(), key=operator.itemgetter(1, 0)):
         log.warning('No URI found for occupation: {o}  ({c})'.format(o=literal, c=count))
 
     return links
