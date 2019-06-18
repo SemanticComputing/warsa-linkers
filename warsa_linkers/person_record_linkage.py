@@ -58,7 +58,7 @@ WHERE {
   }
   OPTIONAL { ?person ^crm:P11_had_participant/crm:P4_has_time-span/crm:P82a_begin_of_the_begin ?event_begin }
   OPTIONAL { ?person ^crm:P143_joined/crm:P144_joined_with ?unit }
-  OPTIONAL { ?person biocrm:occupation ?occupation }
+  OPTIONAL { ?person biocrm:has_occupation ?occupation }
 }
 GROUP BY ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place
     ?rank ?occupation
@@ -218,6 +218,8 @@ def _generate_persons_dict(endpoint):
 
     results = requests.post(endpoint, {'query': QUERY_WARSA_PERSONS}).json()
 
+    # TODO: death_place
+
     persons = defaultdict(dict)
     for person_row in results['results']['bindings']:
         person = person_row['person']['value']
@@ -252,10 +254,9 @@ def _generate_persons_dict(endpoint):
         if len([val for val in person_dict.values() if val is not None]) > 3:
             # Filter out persons with very little information
             persons[person] = person_dict
+            log.debug('Using WarSampo person: {}'.format(person_dict))
         else:
             log.info('Not using person {} for record linkage because of insufficient information'.format(person))
-
-    log.debug('WarSampo person: {}'.format(person_dict))
 
     return persons
 

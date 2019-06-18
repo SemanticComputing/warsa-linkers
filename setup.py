@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="warsa_linkers",
-    version="0.7.0",
+    version="0.7.1",
     author="Erkki Heino, Mikko Koho",
     description="WarSampo entity linking",
     license="MIT",
