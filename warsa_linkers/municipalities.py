@@ -251,7 +251,7 @@ MUNICIPALITY_MAPPING = {
 }
 
 
-def link_to_pnr(graph, target_prop, source_prop, arpa, *args, preprocess=True, **kwargs):
+def link_to_pnr(graph, target_prop, source_prop, arpa, *args, preprocess=True, new_graph=False, **kwargs):
     """
     Link municipalities to Paikannimirekisteri.
     :returns dict containing graph and stuff
@@ -284,7 +284,7 @@ def link_to_pnr(graph, target_prop, source_prop, arpa, *args, preprocess=True, *
         preprocessor = None
 
     # Query the ARPA service and add the matches
-    return process_graph(graph, target_prop, arpa, new_graph=False, source_prop=source_prop,
+    return process_graph(graph, target_prop, arpa, new_graph=new_graph, source_prop=source_prop,
                          preprocessor=preprocessor, progress=True, **kwargs)
 
 
