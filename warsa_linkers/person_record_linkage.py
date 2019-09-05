@@ -218,8 +218,6 @@ def _generate_persons_dict(endpoint):
 
     results = requests.post(endpoint, {'query': QUERY_WARSA_PERSONS}).json()
 
-    # TODO: death_place
-
     persons = defaultdict(dict)
     for person_row in results['results']['bindings']:
         person = person_row['person']['value']
@@ -232,6 +230,7 @@ def _generate_persons_dict(endpoint):
         birth_end = person_row.get('birth_end', {}).get('value')
         death_begin = person_row.get('death_begin', {}).get('value')
         death_end = person_row.get('death_end', {}).get('value')
+        death_place = person_row.get('death_place', {}).get('value')
         activity_end = person_row.get('activity_end', {}).get('value')
         units = person_row.get('units', {}).get('value')
         occupation = person_row.get('occupation', {}).get('value')
@@ -247,6 +246,7 @@ def _generate_persons_dict(endpoint):
             'birth_end': get_date_value(birth_end),
             'death_begin': get_date_value(death_begin),
             'death_end': get_date_value(death_end),
+            'death_place': [death_place] if death_place else None,
             'activity_end': get_date_value(activity_end),
             'unit': units.split('|') if units else None,
             'occupation': occupation

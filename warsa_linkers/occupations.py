@@ -21,6 +21,7 @@ occupation_mapping = {
     'ajom.': 'ajomies',
     'autoh.': 'autohuoltomies',
     'aut.kulj.': 'autonkuljettaja',
+    'di': 'diplomi-insinööri',
     'dipl.ins.': 'diplomi-insinööri',
     'ekon.': 'ekonomi',
     'hansikk.leikk.': 'hansikastyöntekijä',
@@ -148,6 +149,7 @@ occupation_substitutions = [
     (r'^(var\. *)(.+)', r'varaston \2'),
     (r'^(vt\. *)(.+)', r'virkaa tekevä \2'),
     (r'^(ylim\. *)(.+)', r'ylimääräinen  \2'),
+    (r'^(yo\-)(.+)', r'ylioppilas\2'),
 
     (r'(.*)(harj|harjoitt)($|\.)', r'\1harjoittelija'),
     (r'(.*)(insin\. ?)(.*)', r'\1insinööri\3'),
