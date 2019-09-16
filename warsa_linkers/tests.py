@@ -46,7 +46,7 @@ class OccupationTest(unittest.TestCase):
         graph.add((p1, source_prop, Literal('silinterimies', lang='fi')))
         graph.add((p2, source_prop, Literal('työm.')))
         graph.add((p2, source_prop, Literal('juuston suolaaja')))
-        graph.add((p3, source_prop, Literal('kakkaaja')))
+        graph.add((p3, source_prop, Literal('pakkaaja')))
 
         for p in [p1, p2, p3]:
             graph.add((p, RDF.type, ptype))
@@ -74,7 +74,7 @@ class PersonRecordLinkageTest(unittest.TestCase):
                     "person": {"type": "uri", "value": "http://ldf.fi/warsa/actors/person_5513"},
                     "given": {"type": "literal", "value": "J."},
                     "family": {"type": "literal", "value": "Nurmi"},
-                    "rank": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Vaenrikki"},
+                    "ranks": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Vaenrikki"},
                     "rank_level": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#integer",
                                    "value": "9"}
                 },
@@ -91,7 +91,7 @@ class PersonRecordLinkageTest(unittest.TestCase):
                                     "value": "1962-05-04"},
                     "death_end": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#date",
                                   "value": "1962-05-04"},
-                    "rank": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Eversti"},
+                    "ranks": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Eversti"},
                     "rank_level": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#integer",
                                    "value": "15"},
                     "activity_end": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#date",
@@ -112,18 +112,18 @@ class PersonRecordLinkageTest(unittest.TestCase):
                     "death_end": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#date",
                                   "value": "1944-11-19"},
                     "death_place": {"type": "uri", "value": "http://ldf.fi/warsa/places/municipalities/m_place_302"},
-                    "rank": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Kapteeni"},
+                    "ranks": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Kapteeni"},
                     "rank_level": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#integer",
                                    "value": "12"},
                     "activity_end": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#date",
                                      "value": "1941-01-01"},
-                    "occupation": {"type": "uri", "value": "http://ldf.fi/warsa/occupations/sekatyomies"},
+                    "occupations": {"type": "uri", "value": "http://ldf.fi/warsa/occupations/sekatyomies"},
                 },
                 {
                     "person": {"type": "uri", "value": "http://ldf.fi/warsa/actors/person_1270"},
                     "given": {"type": "literal", "value": "Lennart"},
                     "family": {"type": "literal", "value": "Holmberg"},
-                    "rank": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Alikersantti"},
+                    "ranks": {"type": "uri", "value": "http://ldf.fi/warsa/actors/ranks/Alikersantti"},
                     "rank_level": {"type": "literal", "datatype": "http://www.w3.org/2001/XMLSchema#integer",
                                    "value": "3"}
                 },
@@ -144,11 +144,12 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'birth_place': None,
             'death_begin': None,
             'death_end': None,
+            'death_place': None,
             'family': 'Holmberg',
             'given': 'Lennart',
             'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_1270',
-            'rank': 'http://ldf.fi/warsa/actors/ranks/Alikersantti',
+            'rank': ['http://ldf.fi/warsa/actors/ranks/Alikersantti'],
             'rank_level': 3,
             'unit': None
         },
@@ -159,13 +160,13 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'birth_place': ['http://ldf.fi/warsa/places/municipalities/m_place_47'],
             'death_begin': '1944-11-19',
             'death_end': '1944-11-19',
-
+            'death_place': ['http://ldf.fi/warsa/places/municipalities/m_place_302'],
             'family': 'Lahdenperä',
             'given': 'Niilo '
                      'Johannes',
-            'occupation': 'http://ldf.fi/warsa/occupations/sekatyomies',
+            'occupation': ['http://ldf.fi/warsa/occupations/sekatyomies'],
             'person': 'http://ldf.fi/warsa/actors/person_3380',
-            'rank': 'http://ldf.fi/warsa/actors/ranks/Kapteeni',
+            'rank': ['http://ldf.fi/warsa/actors/ranks/Kapteeni'],
             'rank_level': 12,
             'unit': None
         },
@@ -176,12 +177,12 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'birth_place': ['http://ldf.fi/warsa/places/municipalities/m_place_223'],
             'death_begin': '1962-05-04',
             'death_end': '1962-05-04',
-
+            'death_place': None,
             'family': 'Herka Hägglund',
             'given': 'Armas Pekka',
             'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_4399',
-            'rank': 'http://ldf.fi/warsa/actors/ranks/Eversti',
+            'rank': ['http://ldf.fi/warsa/actors/ranks/Eversti'],
             'rank_level': 15,
             'unit': ['http://ldf.fi/warsa/actors/actor_3179']
         },
@@ -192,11 +193,12 @@ class PersonRecordLinkageTest(unittest.TestCase):
             'birth_place': None,
             'death_begin': None,
             'death_end': None,
+            'death_place': None,
             'family': 'Nurmi',
             'given': 'J.',
             'occupation': None,
             'person': 'http://ldf.fi/warsa/actors/person_5513',
-            'rank': 'http://ldf.fi/warsa/actors/ranks/Vaenrikki',
+            'rank': ['http://ldf.fi/warsa/actors/ranks/Vaenrikki'],
             'rank_level': 9,
             'unit': None
         }
