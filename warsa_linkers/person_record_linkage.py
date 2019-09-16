@@ -19,6 +19,8 @@ CRM = Namespace('http://www.cidoc-crm.org/cidoc-crm/')
 INPUT_DATE_FORMAT = '%Y-%m-%d'
 ISO_FORMAT = '%Y-%m-%d'
 
+# TODO: Handle SAMPLEd duplicate values better
+
 QUERY_WARSA_PERSONS = '''
 PREFIX wsch: <http://ldf.fi/schema/warsa/>
 PREFIX wsa: <http://ldf.fi/schema/warsa/actors/>
@@ -26,28 +28,32 @@ PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
 PREFIX text: <http://jena.apache.org/text#>
 PREFIX biocrm: <http://ldf.fi/schema/bioc/>
-SELECT ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place ?rank
-    (SAMPLE(?rank_lvl) AS ?rank_level) (MAX(?event_begin) as ?activity_end)
-    (GROUP_CONCAT(DISTINCT ?unit; separator='|') as ?units) ?occupation
+SELECT ?person (SAMPLE(?given_) as ?given) (SAMPLE(?family_) as ?family) (SAMPLE(?birth_begin_) as ?birth_begin) (SAMPLE(?birth_end_) as ?birth_end) 
+    (SAMPLE(?birth_place_) as ?birth_place) (SAMPLE(?death_begin_) as ?death_begin) (SAMPLE(?death_end_) as ?death_end) (SAMPLE(?death_place_) as ?death_place)
+    (GROUP_CONCAT(DISTINCT ?rank; separator='|') as ?ranks)
+    (SAMPLE(?rank_lvl) AS ?rank_level) 
+    (MAX(?event_begin) as ?activity_end)
+    (GROUP_CONCAT(DISTINCT ?unit; separator='|') as ?units) 
+    (GROUP_CONCAT(DISTINCT ?occupation; separator='|') as ?occupations) 
 WHERE {
-      ?person a wsch:Person .
-      ?person foaf:firstName ?given .
-      ?person foaf:familyName ?family .
+  ?person a wsch:Person .
+  ?person foaf:firstName ?given_ .
+  ?person foaf:familyName ?family_ .
   OPTIONAL {
     ?person ^crm:P98_brought_into_life ?birth .
     ?birth crm:P4_has_time-span [
-        crm:P82a_begin_of_the_begin ?birth_begin ;
-        crm:P82b_end_of_the_end ?birth_end ;
+        crm:P82a_begin_of_the_begin ?birth_begin_ ;
+        crm:P82b_end_of_the_end ?birth_end_ ;
         ]
-    OPTIONAL { ?birth crm:P7_took_place_at ?birth_place . }
+    OPTIONAL { ?birth crm:P7_took_place_at ?birth_place_ . }
   }
   OPTIONAL {
     ?person ^crm:P100_was_death_of ?death .
     ?death crm:P4_has_time-span [
-        crm:P82a_begin_of_the_begin ?death_begin ;
-        crm:P82b_end_of_the_end ?death_end ;
+        crm:P82a_begin_of_the_begin ?death_begin_ ;
+        crm:P82b_end_of_the_end ?death_end_ ;
         ]
-    OPTIONAL { ?death crm:P7_took_place_at ?death_place . }
+    OPTIONAL { ?death crm:P7_took_place_at ?death_place_ . }
   }
   OPTIONAL {
     ?promo crm:P11_had_participant ?person .
@@ -60,13 +66,12 @@ WHERE {
   OPTIONAL { ?person ^crm:P143_joined/crm:P144_joined_with ?unit }
   OPTIONAL { ?person biocrm:has_occupation ?occupation }
 }
-GROUP BY ?person ?given ?family ?birth_begin ?birth_end ?birth_place ?death_begin ?death_end ?death_place
-    ?rank ?occupation
+GROUP BY ?person 
 HAVING(MAX(COALESCE(?rank_lvl, 1)) >= MAX(COALESCE(?rank_level2, 1)))
 '''
 
 
-def init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size):
+def init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size, training_size):
     if training_settings_file:
         try:
             with open(training_settings_file, 'rb') as f:
@@ -88,7 +93,7 @@ def init_linker(data_fields, training_data_file, training_settings_file, doc_dat
 
     log.info('Generating training data')
     linker.sample(doc_data, per_data, sample_size=sample_size)
-    linker.markPairs(trainingDataLink(doc_data, per_data, common_key='person'))
+    linker.markPairs(trainingDataLink(doc_data, per_data, common_key='person', training_size=training_size))
     linker.train()
 
     if training_data_file:
@@ -137,8 +142,12 @@ def read_person_links(json_file: str):
     return link_tuples
 
 
-def link_persons(endpoint, doc_data, data_fields, training_links, sample_size=200000, threshold_ratio=0.5,
-                 training_data_file=None, training_settings_file=None):
+def link_persons(endpoint, doc_data, data_fields, training_links,
+                 sample_size=200000,
+                 training_size=50000,
+                 threshold_ratio=0.5,
+                 training_data_file=None,
+                 training_settings_file=None):
     """
     Link document records of persons to WarSampo person instances.
 
@@ -146,7 +155,8 @@ def link_persons(endpoint, doc_data, data_fields, training_links, sample_size=20
     :param doc_data: Dataset of person documents
     :param data_fields: Data field specifications for linking
     :param training_links: Known person links file
-    :param sample_size: Sample size for training
+    :param sample_size: Size of the sample to draw for active learning
+    :param training_size: limit of number of training examples for consumption by the ActiveLearning markPairs method
     :param threshold_ratio: Desired recall / precision importance (between 0 and 1)
     :param training_data_file:
     :param training_settings_file:
@@ -161,7 +171,8 @@ def link_persons(endpoint, doc_data, data_fields, training_links, sample_size=20
 
     link_graph = Graph()
 
-    linker = init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data, sample_size)
+    linker = init_linker(data_fields, training_data_file, training_settings_file, doc_data, per_data,
+                         sample_size, training_size)
 
     # threshold_ratio = linker.threshold(doc_data, per_data, threshold_ratio)
     links = linker.match(doc_data, per_data, threshold=threshold_ratio)
@@ -223,7 +234,7 @@ def _generate_persons_dict(endpoint):
         person = person_row['person']['value']
         given = person_row['given']['value']
         family = person_row['family']['value']
-        rank = person_row.get('rank', {}).get('value')
+        ranks = person_row.get('ranks', {}).get('value')
         rank_level = person_row.get('rank_level', {}).get('value')
         birth_place = person_row.get('birth_place', {}).get('value')
         birth_begin = person_row.get('birth_begin', {}).get('value')
@@ -233,13 +244,13 @@ def _generate_persons_dict(endpoint):
         death_place = person_row.get('death_place', {}).get('value')
         activity_end = person_row.get('activity_end', {}).get('value')
         units = person_row.get('units', {}).get('value')
-        occupation = person_row.get('occupation', {}).get('value')
+        occupations = person_row.get('occupations', {}).get('value')
 
         person_dict = {
             'person': person,
             'given': given,
             'family': _sanitize_family_name(family),
-            'rank': rank,
+            'rank': ranks.split('|') if ranks else None,
             'rank_level': int(rank_level) if rank_level else None,
             'birth_place': [birth_place] if birth_place else None,
             'birth_begin': get_date_value(birth_begin),
@@ -249,7 +260,7 @@ def _generate_persons_dict(endpoint):
             'death_place': [death_place] if death_place else None,
             'activity_end': get_date_value(activity_end),
             'unit': units.split('|') if units else None,
-            'occupation': occupation
+            'occupation': occupations.split('|') if occupations else None
         }
         if len([val for val in person_dict.values() if val is not None]) > 3:
             # Filter out persons with very little information
@@ -287,6 +298,7 @@ def get_person_links(documents: dict, persons: dict, links):
         per = link[1]
         if doc in documents and per in persons:
             documents[doc].update({'person': per})
+            log.debug('Link found for document: {doc}'.format(doc=documents[doc]))
         else:
             log.warning('Could not find linked person: {} - {}'.format(doc, per))
 
