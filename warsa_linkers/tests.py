@@ -8,27 +8,31 @@ from unittest import mock
 from rdflib import URIRef, Graph, Literal, RDF
 
 from .person_record_linkage import _generate_persons_dict
-from .occupations import link_occupations
+from .occupations import link_occupations, _harmonize_labels, occupation_substitutions, occupation_mapping
 
 
 class OccupationTest(unittest.TestCase):
     OCCUPATION_LINK_SPARQL_RESULTS = {
         "head": {
-            "vars": ["value", "id"]
+            "vars": ["label", "id"]
         },
         "results": {
             "bindings": [
                 {
-                    "value": {"type": "literal", "value": "työmies"},
+                    "label": {"type": "literal", "value": "työmies"},
                     "id": {"type": "uri", "value": "http://ldf.fi/warsa/occupations/tyomies"}
                 },
                 {
-                    "value": {"type": "literal", "value": "silinterimies"},
+                    "label": {"type": "literal", "value": "silinterimies"},
                     "id": {"type": "uri", "value": "http://ldf.fi/warsa/occupations/silinterimies"}
                 },
                 {
-                    "value": {"type": "literal", "value": "juuston suolaaja"},
+                    "label": {"type": "literal", "value": "juuston suolaaja"},
                     "id": {"type": "uri", "value": "http://ldf.fi/warsa/occupations/juustonsuolaaja"}
+                },
+                {
+                    "label": {"type": "literal", "value": "linnoitustyömies"},
+                    "id": {"type": "uri", "value": "http://ldf.fi/ammo/linnoitustyomies"}
                 }
             ]
         }
@@ -60,6 +64,35 @@ class OccupationTest(unittest.TestCase):
 
         self.assertIsNotNone(results.triples((p1, target_prop, workman)))
         self.assertEqual(2, len(list(results.triples((p2, target_prop, None)))))
+
+    def test_harmonize(self):
+        EXPECTED_MAPPING = {
+            'huonek.työm.': 'huonekalutyömies',
+            'its.pka': 'itsellinenpoika',
+            'its.': 'itsellinen',
+            'itsell.': 'itsellinen',
+            'lent.teht.työm.': 'lentokonetehtaan työmies',
+            'lin.työm.': 'linnoitustyömies',
+            'linn.työm.': 'linnoitustyömies',
+            'linnoitustyöm.': 'linnoitustyömies',
+            'palstatilallinen': 'palstatilallinen',
+            'palstatilall.pa': 'palstatilallisen poika',
+            'palstatil. pka': 'palstatilallisen poika',
+            'palstatil.pka': 'palstatilallisen poika',
+            'opett.': 'opettaja',
+            'opett.kokelas': 'opettajakokelas',
+            'veistonopett.': 'veistonopettaja',
+            'yht.koul.opet.': 'yht.koul.opettaja',
+        }
+
+        for (original, substitution) in EXPECTED_MAPPING.items():
+            self.assertEqual(_harmonize_labels(original, r'[,/]', occupation_mapping, occupation_substitutions),
+                             [substitution])
+
+    def test_harmonize_mapping(self):
+        for (original, substitution) in occupation_mapping.items():
+            self.assertEqual(_harmonize_labels(original, r'[,/]', occupation_mapping, occupation_substitutions),
+                             [substitution])
 
 
 class PersonRecordLinkageTest(unittest.TestCase):

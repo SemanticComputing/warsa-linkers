@@ -19,13 +19,17 @@ log = logging.getLogger(__name__)
 
 occupation_mapping = {
     'ajom.': 'ajomies',
+    'au': 'aliupseeri',
     'autoh.': 'autohuoltomies',
+    'autokoulun om.': 'autokoulun omistaja',
+    'autonk.': 'autonkuljettaja',
     'aut.kulj.': 'autonkuljettaja',
     'di': 'diplomi-insinööri',
     'dipl.ins.': 'diplomi-insinööri',
     'ekon.': 'ekonomi',
     'hansikk.leikk.': 'hansikastyöntekijä',
     'holanterin etum': 'holanterin etumies',
+    'henkiv.tarkast.': 'henkivakuutustarkastastaja',
     'hevosm.': 'hevosmies',
     'huoltom.': 'huoltomies',
     'fk': 'filosofian kandidaatti',
@@ -33,21 +37,33 @@ occupation_mapping = {
     'ins.': 'insinööri',
     'junam.': 'junamies',
     'järj.m.': 'järjestysmies',
-    'its.': 'itsellinen',
     'kassak:piseppä': 'kassakaappiseppä',
     'kalast.': 'kalastaja',
+    'kaup.hoit.': 'kaupanhoitaja',
+    'kaup.maanmitt.': 'kaupungin maanmittaaja',
+    'kaup.työm.': 'kaupungin työntekijä',
+    'kaup.voud.apul.': 'kaupunginvoudin apulainen',
     'kemik.kaup.om.': 'kemikalionomistaja',
     'kivenhakk.': 'kivenhakkaaja',
     'konst.': 'konstaapeli',
+    'kun.kod.joht.': 'kunnalliskodin johtaja',
     'laitosm.': 'laitosmies',
+    'lent.teht.työm.': 'lentokonetehtaan työmies',
+    'linj.aut.rahast': 'linja-auton rahastaja',
+    'linjam.': 'linjamies',
     'lohkotil.': 'lohkotilallinen',
     'lukiol.': 'lukiolainen',
+    'lääk.': 'lääkäri',
+    'lääk.vääp.': 'lääkintävääpeli',
     'korj.pajantyöm.': 'korjauspajan työntekijä',
     'koulul.': 'koululainen',
+    'kuolul.': 'koululainen',
     'maanvilj.tytär': 'maanviljelijän tytär',
+    'maanvilj.koul.': 'maanviljelyskoululainen',
     'maatal.teknikko': 'maatalousteknikko',
     'majatalon pit.': 'majatalonpitäjä',
     'merim.': 'merimies',
+    'met.painaja': 'metallipainaja',
     'mv': 'maanviljelijä',
     'mv.': 'maanviljelijä',
     'mv.p': 'maanviljelijän poika',
@@ -60,6 +76,7 @@ occupation_mapping = {
     'nti.': 'neiti',
     'opisk.': 'opiskelija',
     'opett.': 'opettaja',
+    'palstatilall.pa': 'palstatilallisen poika',
     'pientil.': 'pientilallinen',
     'peräm.': 'perämies',
     'piir.apulainen': 'piirtäjän apulainen',
@@ -68,32 +85,45 @@ occupation_mapping = {
     'porolappal.pka': 'porosaamelaisen poika',
     'poliisikonst': 'poliisikonstaapeli',
     'poliisikonst.': 'poliisikonstaapeli',
+    'posl.teht.työm.': 'posliinitehtaan työläinen',
     'postelj.': 'posteljooni',
     'postink.': 'postinkantaja',
     'prässim.': 'prässimies',
     'putkim.': 'putkimies',
+    'putkias.apul.': 'putkiasentajan apulainen',
+    'pp.mekaankko': 'polkupyoramekaanikko',
     'puutarh.': 'puutarhuri',
+    'rad.työm.tek.': 'radiotyömies',
     'rahast.': 'rahastaja',
+    'rak.alalla': 'rakennustyöläinen',
     'rakennus-': 'rakennustyöläinen',
     'rautatiel.': 'rautatieläinen',
+    'sem.opp.': 'seminaarin oppilas',
+    'sorv.apul.': 'sorvaajan apulainen',
     'suut.': 'suutari',
     'taloll.pka': 'talollisen poika',
     'talollisen pka': 'talollisen poika',
     'tal.om.': 'talonomistaja',
+    'tal.omist.': 'talonomistaja',
     'tal.pka': 'talollisen poika',
     'taloll.': 'talollinen',
+    'teht.vart.': 'tehdasvartija',
     'teht.virk.': 'tehdasvirkailija',
     'tekn.ylioppilas.': 'tekniikan ylioppilas',
+    'terv.hoid.tark.': 'terveydenhoidon tarkastaja',
     'teurast.': 'teurastaja',
     'tilall.pka': 'tilallisen poika',
     'tilall. pka': 'tilallisen poika',
     'teht.työm.': 'tehdastyöläinen',
+    'tsto apul.': 'toimistoapulainen',
     'tullim.': 'tullimies',
+    'turp.hoit.apul.': 'turbiininhoitajan apulainen',
     'ulosottom.': 'ulosottomies',
     'valok.': 'valokuvaaja',
     'varastom.': 'varastomies',
     'viilankarkais.': 'viilankarkaisija',
     'vinssim.': 'vinssimies',
+    'yhteisk.tiet.yo': 'yhteiskuntatieteiden ylioppilas'
 }
 
 occupation_substitutions = [
@@ -107,14 +137,16 @@ occupation_substitutions = [
     (r'^(fil\. *)(.+)', r'filosofian \2'),
     (r'^(hall.oik. *)(.+)', r'hallinto-oikeuden \2'),
     (r'^(ho:n *)(.+)', r'hovioikeuden \2'),
+    (r'^(huonek\.)(.+)', r'huonekalu\2'),
     (r'^(huv\. *)(.+)', r'huvilan \2'),
     (r'^(höyryk\. *)(.+)', r'höyrykone \2'),
+    (r'^(?:its\.|itsell\.)(.*)', r'itsellinen\1'),
     (r'^(kansak\. *)(.+)', r'kansakoulun \2'),
     (r'^(kirjansit\.)(.+)', r'kirjansitomo\2'),
     (r'^(kun\.kod\. )(.+)', r'kunnalliskodin \2'),
     (r'^(lentok\. *)(.+)', r'lentokone \2'),
     (r'^(l\-autoas\. *)(.+)', r'linja-autoaseman \2'),
-    (r'^((lin)|(linn)\.)(.+)', r'linnoitus\2'),
+    (r'^(?:lin|linn)(?:\.)(.+)', r'linnoitus\1'),
     (r'^(maat\.metsät\. *)(.+)', r'maa- ja metsätaloustieteiden \2'),
     (r'^(maat\.)(.+)', r'maatalous\2'),
     (r'^(makk\.)(.+)', r'makkara\2'),
@@ -122,11 +154,10 @@ occupation_substitutions = [
     (r'^(metsänh\.)(.+)', r'metsänhoitaja\2'),
     (r'^(mökkil\.)(.*)', r'mökkiläisen \2'),
     (r'^(mv\.?)(.+)', r'maanviljelijän\2'),
-    (r'^((palstatil)|(palst)\. *)(.+)', r'palstatilallisen \2'),
+    (r'^(?:palstatil|palst)(?:\. *)(.+)', r'palstatilallisen \1'),
     (r'^(pap\.)(.+)', r'paperi\2'),
     (r'^(pienv\. *)(.+)', r'pienviljelijän \2'),
     (r'^(piir\. *)(.+)', r'piirtäjän \2'),
-    (r'^((posl)|(porsl)\.)(.+)', r'posliini\2'),
     (r'^(pol\.)(.+)', r'poliisi\2'),
     (r'^(puutarh\. *)(.+)', r'puutarha\2'),
     (r'^(puh\. *)(.+)', r'puhelin\2'),
@@ -154,6 +185,7 @@ occupation_substitutions = [
     (r'(.*)(harj|harjoitt)($|\.)', r'\1harjoittelija'),
     (r'(.*)(insin\. ?)(.*)', r'\1insinööri\3'),
     (r'(.*)(oik\.)', r'\1oikeus'),
+    (r'(.*)(?:opett|opet)(?:\.)(.*)', r'\1opettaja\2'),
     (r'(.*)(pka)($|\.)', r'\1poika'),
     (r'(.*)(tekn\.)(.*)', r'\1teknikko\3'),
     (r'(.*)(työnj)($|\.)', r'\1työnjohtaja'),
@@ -190,7 +222,6 @@ occupation_substitutions = [
     (r'(.+)(opisk)($|\.)', r'\1opiskelija'),
     (r'(.+)(opistol\.)', r'\1opistolainen'),
     (r'(.+)(opp\.)', r'\1oppilas'),
-    (r'(.+)((opett|opet)\.)', r'\1opettaja'),
     (r'(.+)(vart\.)', r'\1vartija'),
     (r'(.+)(virk\.)', r'\1virkailija'),
     (r'(.+)(reht\.)$', r'\1rehtori'),
@@ -200,8 +231,33 @@ occupation_substitutions = [
 ]
 
 
+def _harmonize_labels(literal, sep, valuemap, subs):
+    literal = str(literal).strip()
+
+    if literal == '-':
+        return ''
+
+    processed = []
+    for s in re.split(sep, literal):
+        if not s:
+            continue
+
+        s = s.strip()
+        if s in valuemap:
+            value = valuemap[s]
+        else:
+            value = s
+            for sub in subs:
+                value = re.sub(sub[0], sub[1], value)
+
+        if value:
+            processed.append(value)
+
+    return processed
+
+
 def link_occupations(graph, endpoint, source_property: URIRef, target_property: URIRef, resource_type: URIRef,
-                     sep=r'[,/]', score_threshold=0.8, subs=occupation_substitutions, valuemap=occupation_mapping):
+                     sep=r'[,/]', score_threshold=0.88, subs=occupation_substitutions, valuemap=occupation_mapping):
     """
     Link occupations in graph based on string similarity. Each property value is compared against all values in
     the occupation ontology.
@@ -223,35 +279,11 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
         SELECT ?id ?label {{
             GRAPH <http://ldf.fi/warsa/occupations> {{
-                ?id a <http://ldf.fi/schema/bioc/Occupation> .
+                ?id a <http://ldf.fi/schema/ammo/Concept> .
                 ?id skos:prefLabel|skos:altLabel ?label .
             }}
          }}
     """
-
-    def harmonize(literal):
-        literal = str(literal).strip()
-
-        if literal == '-':
-            return ''
-
-        processed = []
-        for s in re.split(sep, literal):
-            if not s:
-                continue
-
-            s = s.strip()
-            if s in valuemap:
-                value = valuemap[s]
-            else:
-                value = s
-                for sub in subs:
-                    value = re.sub(sub[0], sub[1], value)
-
-            if value:
-                processed.append(value)
-
-        return processed
 
     def find_best_match(occupation_do, occupation_literal):
         best_score = 0
@@ -296,7 +328,7 @@ def link_occupations(graph, endpoint, source_property: URIRef, target_property: 
     for person in graph[:RDF.type:resource_type]:
         literals = graph.objects(person, source_property)
         for literal in literals:
-            harmonized = harmonize(literal)
+            harmonized = _harmonize_labels(literal, sep, valuemap, subs)
             for occupation in harmonized:
                 occupation_uri = get_occupation_link(occupation_do_tuples, linked_values, occupation, literal)
                 if occupation_uri:
