@@ -162,6 +162,8 @@ def link_persons(endpoint, doc_data, data_fields, training_links,
     :param training_settings_file:
     :return: RDFLib Graph with updated links
     """
+    log.info('Person record linkage with sample size {ss} and training size {ts} and threshold ratio {tr}'.
+             format(ss=sample_size, ts=training_size, tr=threshold_ratio))
     log.info('Got {} document records'.format(len(doc_data)))
 
     per_data = _generate_persons_dict(endpoint)

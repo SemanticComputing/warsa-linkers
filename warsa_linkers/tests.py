@@ -67,6 +67,8 @@ class OccupationTest(unittest.TestCase):
 
     def test_harmonize(self):
         EXPECTED_MAPPING = {
+            'autonkulj': 'autonkuljettaja',
+            'hissinkulj.': 'hissinkuljettaja',
             'huonek.työm.': 'huonekalutyömies',
             'its.pka': 'itsellinenpoika',
             'its.': 'itsellinen',
@@ -75,6 +77,7 @@ class OccupationTest(unittest.TestCase):
             'lin.työm.': 'linnoitustyömies',
             'linn.työm.': 'linnoitustyömies',
             'linnoitustyöm.': 'linnoitustyömies',
+            'maatal.työnjoh.': 'maataloustyönjohtaja',
             'palstatilallinen': 'palstatilallinen',
             'palstatilall.pa': 'palstatilallisen poika',
             'palstatil. pka': 'palstatilallisen poika',
