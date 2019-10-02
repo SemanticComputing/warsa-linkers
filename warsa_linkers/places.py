@@ -124,10 +124,11 @@ nen_re = re.compile(r'\w+nen\b')
 
 def pruner(text):
     """
-    >>> pruner('Möttönen')
+    >>> pruner('möttönen')
     >>> pruner('Saimaankanava')
     'Saimaankanava'
     >>> pruner('Tero Teronen')
+    'Tero Teronen'
     >>> pruner('Tenenko')
     'Tenenko'
     >>> pruner('Tenenko Kaivo')
