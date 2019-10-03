@@ -263,7 +263,7 @@ occupation_substitutions = [
     (r'(.+)(virk\.)', r'\1virkailija'),
     (r'(.+)(reht\.)$', r'\1rehtori'),
     (r'(.+)(til\.)', r'\1tilallinen'),
-    (r'(.+)(työl\.)', r'\työläinen'),
+    (r'(.+)(työl\.)', r'\1työläinen'),
     (r'(.+)(toim\.)', r'\1toimittaja'),
     (r'(.+)(ups\.)', r'\1upseeri'),
 ]
