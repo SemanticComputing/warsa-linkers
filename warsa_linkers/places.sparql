@@ -34,7 +34,7 @@ SELECT ?id ?label ?ngram ?type
   }
   UNION
   {
-    SERVICE <http://172.18.0.3:3030/pnr/sparql> {
+    SERVICE <https://ldf.fi/pnr/sparql> {
       VALUES ?ngram {
         <VALUES>
       }
