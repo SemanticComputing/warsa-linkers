@@ -645,7 +645,7 @@ class Validator:
         if the context mentions knighthood. Non-knights' scores are reduced
         in this case.
         """
-        if not knight_re.search(text):
+        if not text or not knight_re.search(text):
             # No mention of knighthood in context.
             return 0
 

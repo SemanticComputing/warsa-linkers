@@ -158,7 +158,7 @@ class Validator:
         units = []
         ranked_matches = get_match_scores(res)
         for r in res:
-            cover_check = self.check_cover(r['label'], original_text)
+            cover_check = self.check_cover(r['label'] or '', original_text or '')
             if cover_check is False or cover_check is True and self.accept_cover is False:
                 discarded.append(r)
                 logger.info('Reject: cover {} {}'.format(r['label'], r['id']))
