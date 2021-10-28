@@ -15,6 +15,25 @@ SELECT DISTINCT ?id ?ngram (COALESCE(?nlabel, ?plabel) AS ?label) ?first_names ?
 WHERE {
   {
     SELECT DISTINCT ?id ?ngram {
+      {
+      VALUES ?ngram {
+        <VALUES>
+      }
+      FILTER(STRLEN(?ngram)>2)
+      BIND(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(?ngram, '\\.$', ''), '[áà]', 'a'), '[éè]', 'e'), '[íì]', 'i'), '[óò]', 'o'), '[úù]', 'u'), '[ýỳ]', 'y'), 'W', 'V') AS ?n_ngram)
+      BIND("^((?:[a-zA-ZäÄåÅöÖüÜ]\\.[ ]*)|(?:[a-zA-ZäÄöÖåÅüÜ-]{3,}[ ]+))((?:-?[a-zA-ZäÄåÅöÖüÜ]\\.[ ]*)|(?:[a-zA-ZäÄöÖåÅüÜ-]{3,}[ ]+))?((?:[a-zA-ZäÄåÅöÖüÜ]\\.[ ]*)|(?:[a-zA-ZäÄöÖåÅüÜ-]{3,}[ ]+))*([_a-zA-ZäÄöÖåÅüÜ-]{3,})$" AS ?nimiregex)
+      BIND(REPLACE(REPLACE(?n_ngram, ?nimiregex, "$4"), "_", " ") AS ?family_name)
+      BIND(REPLACE(REPLACE(?n_ngram, ?nimiregex, "$1"), "^(.*?)[ ]*$", "$1") AS ?ngrametu)
+      BIND(REPLACE(REPLACE(?n_ngram, ?nimiregex, "$2"), "^(.*?)[ ]*$", "$1") AS ?ngramkeski)
+      BIND(UCASE(?ngrametu) AS ?etu)
+      FILTER(?ngramkeski="" || !(STRENDS(?ngrametu, ".") && !STRENDS(?ngramkeski, ".")))
+      BIND(UCASE(REPLACE(?ngramkeski, '^-', '')) AS ?keski)
+      BIND(CONCAT(REPLACE(REPLACE(?family_name, "-\\s*$", ""), "-", "~1 "), "~1") AS ?qstring)
+
+      GRAPH <http://ldf.fi/warsa/persons> { ?id text:query ?qstring . }
+      }
+      UNION
+      {
       VALUES ?ngram {
         <VALUES>
       }
@@ -30,7 +49,9 @@ WHERE {
       BIND(CONCAT(REPLACE(REPLACE(?family_name, "-\\s*$", ""), "-", "~1 "), "~1") AS ?qstring)
       BIND(REPLACE(?qstring, 'V', 'W') AS ?qstring2)
 
-      GRAPH <http://ldf.fi/warsa/persons> { { ?id text:query ?qstring . } UNION { ?id text:query ?qstring2 . } }
+      GRAPH <http://ldf.fi/warsa/persons> { ?id text:query ?qstring2 . }
+      }
+ 
       ?id foaf:familyName ?familyName_orig .
       BIND(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(?familyName_orig, '[áà]', 'a'), '[éè]', 'e'), '[íì]', 'i'), '[óò]', 'o'), '[úù]', 'u'), '[ýỳ]', 'y'), 'W', 'V') AS ?familyName)
       FILTER((UCASE(?family_name) = UCASE(?familyName)) || (CONTAINS(?familyName, "(") || CONTAINS(?familyName, ".")) && REGEX(?familyName, CONCAT("^", ?family_name, "\\b"), "i"))
